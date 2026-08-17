@@ -1,0 +1,995 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>NIVASA — Intelligent Home Automation, Protection &amp; Multi-Factor Security System</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500;600&display=swap');
+
+  :root{
+    --bg:#12151a; --bg-grid: rgba(255,255,255,.035);
+    --panel:#181d24; --panel-alt:#1e242c;
+    --line:#2a323c; --line-soft:#232a33;
+    --text:#e7e7e2; --text-dim:#8b93a0; --text-faint:#5b6270;
+    --blue:#5d8fbe; --blue-dim:#3d5c78;
+    --brass:#d0975a;
+    --s0:#4c9a6a; --s0bg:rgba(76,154,106,.12);
+    --s1:#d9b34c; --s1bg:rgba(217,179,76,.12);
+    --s2:#d97b3d; --s2bg:rgba(217,123,61,.12);
+    --s3:#c9503f; --s3bg:rgba(201,80,63,.12);
+    --s4:#b23a3a; --s4bg:rgba(178,58,58,.16);
+    --radius:3px;
+    --font-d:'Space Grotesk',sans-serif;
+    --font-b:'IBM Plex Sans',sans-serif;
+    --font-m:'IBM Plex Mono',monospace;
+  }
+  *{box-sizing:border-box; margin:0; padding:0;}
+  html,body{background:var(--bg); color:var(--text); font-family:var(--font-b); font-size:14px; line-height:1.55;}
+  body{
+    background-image:
+      linear-gradient(var(--bg-grid) 1px, transparent 1px),
+      linear-gradient(90deg, var(--bg-grid) 1px, transparent 1px);
+    background-size: 28px 28px;
+    min-height:100vh;
+  }
+  h1,h2,h3,h4{font-family:var(--font-d); font-weight:600; letter-spacing:.2px;}
+  .eyebrow{font-family:var(--font-m); font-size:10.5px; letter-spacing:1.8px; text-transform:uppercase; color:var(--text-faint);}
+  a{color:var(--blue);}
+  button{font-family:var(--font-b); cursor:pointer;}
+
+  /* ---------- corner-tick spec card motif ---------- */
+  .spec{ position:relative; background:var(--panel); border:1px solid var(--line); padding:18px; }
+  .spec::before,.spec::after{ content:""; position:absolute; width:9px; height:9px; border:1.5px solid var(--blue); }
+  .spec::before{ top:-1px; left:-1px; border-right:none; border-bottom:none; }
+  .spec::after{ bottom:-1px; right:-1px; border-left:none; border-top:none; }
+
+  /* ---------- header ---------- */
+  header{
+    position:sticky; top:0; z-index:50;
+    background:rgba(18,21,26,.94); backdrop-filter:blur(6px);
+    border-bottom:1px solid var(--line);
+    padding:14px 26px;
+    display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:12px;
+  }
+  .brand{display:flex; align-items:center; gap:12px;}
+  .brand-mark{
+    width:34px; height:34px; border:1.5px solid var(--blue); display:flex; align-items:center; justify-content:center;
+    font-family:var(--font-d); font-weight:700; font-size:13px; color:var(--blue); position:relative;
+  }
+  .brand-mark::after{content:""; position:absolute; inset:4px; border:1px solid var(--line);}
+  .brand-name{font-family:var(--font-d); font-size:18px; font-weight:700; letter-spacing:.5px;}
+  .brand-sub{font-family:var(--font-m); font-size:10px; color:var(--text-faint); letter-spacing:1px;}
+  .hdr-badges{display:flex; gap:8px; flex-wrap:wrap;}
+  .badge{
+    font-family:var(--font-m); font-size:10.5px; letter-spacing:.6px; padding:6px 10px;
+    border:1px solid var(--line); display:flex; align-items:center; gap:6px; color:var(--text-dim);
+  }
+  .dot{width:7px; height:7px; border-radius:50%; display:inline-block; flex-shrink:0;}
+  .dot.s0{background:var(--s0);} .dot.s1{background:var(--s1);} .dot.s2{background:var(--s2);}
+  .dot.s3{background:var(--s3);} .dot.s4{background:var(--s4); box-shadow:0 0 0 3px var(--s4bg);}
+  .dot.online{background:var(--s0);} .dot.isolated{background:var(--s3);}
+
+  /* ---------- nav ---------- */
+  nav{
+    display:flex; gap:2px; overflow-x:auto; padding:0 26px; background:var(--panel);
+    border-bottom:1px solid var(--line); position:sticky; top:64px; z-index:40;
+  }
+  nav button{
+    background:none; border:none; color:var(--text-faint); font-family:var(--font-m); font-size:11px;
+    letter-spacing:1px; text-transform:uppercase; padding:13px 16px; border-bottom:2px solid transparent;
+    white-space:nowrap; transition:.15s;
+  }
+  nav button:hover{color:var(--text);}
+  nav button.active{color:var(--blue); border-bottom-color:var(--blue);}
+
+  main{max-width:1180px; margin:0 auto; padding:34px 26px 90px;}
+  section{display:none;}
+  section.active{display:block; animation:fade .25s ease;}
+  @keyframes fade{ from{opacity:0; transform:translateY(4px);} to{opacity:1; transform:translateY(0);} }
+
+  .page-head{margin-bottom:26px; border-bottom:1px solid var(--line); padding-bottom:18px;}
+  .page-head h2{font-size:22px; margin-top:6px;}
+  .page-head p{color:var(--text-dim); max-width:720px; margin-top:8px; font-size:13.5px;}
+
+  .grid{display:grid; gap:16px;}
+  .g2{grid-template-columns:repeat(2,1fr);}
+  .g3{grid-template-columns:repeat(3,1fr);}
+  .g4{grid-template-columns:repeat(4,1fr);}
+  @media(max-width:900px){ .g2,.g3,.g4{grid-template-columns:1fr 1fr;} }
+  @media(max-width:640px){ .g2,.g3,.g4{grid-template-columns:1fr;} }
+
+  .card-title{font-family:var(--font-d); font-size:14.5px; font-weight:600; margin-bottom:6px;}
+  .card-body{color:var(--text-dim); font-size:13px;}
+  .tag{display:inline-block; font-family:var(--font-m); font-size:9.5px; letter-spacing:1px; text-transform:uppercase;
+       padding:2px 7px; border:1px solid var(--line); color:var(--text-faint); margin-bottom:10px;}
+  .tag.warn{color:var(--s1); border-color:var(--s1bg);}
+
+  .disclaimer{
+    font-family:var(--font-m); font-size:11px; color:var(--s1); border:1px dashed var(--s1); background:var(--s1bg);
+    padding:9px 12px; margin:14px 0; letter-spacing:.3px;
+  }
+
+  /* ---------- overview ---------- */
+  .hero{ display:grid; grid-template-columns:1.3fr 1fr; gap:30px; margin-bottom:34px; align-items:start;}
+  @media(max-width:860px){.hero{grid-template-columns:1fr;}}
+  .hero-title{font-size:38px; line-height:1.08; margin:10px 0 12px;}
+  .hero-full{font-family:var(--font-m); color:var(--text-dim); font-size:12.5px; letter-spacing:.4px; margin-bottom:16px;}
+  .hive-chip{
+    display:inline-flex; align-items:center; gap:8px; border:1px solid var(--brass); color:var(--brass);
+    font-family:var(--font-m); font-size:11px; padding:6px 10px; letter-spacing:1px; margin-top:14px;
+  }
+  .stat-row{display:flex; gap:0; border:1px solid var(--line); margin-top:20px;}
+  .stat{flex:1; padding:14px 16px; border-right:1px solid var(--line);}
+  .stat:last-child{border-right:none;}
+  .stat .num{font-family:var(--font-d); font-size:24px; font-weight:700; color:var(--blue);}
+  .stat .lbl{font-family:var(--font-m); font-size:9.5px; color:var(--text-faint); letter-spacing:.8px; text-transform:uppercase; margin-top:2px;}
+
+  /* ---------- pipeline diagram ---------- */
+  .pipeline{display:flex; align-items:center; gap:0; overflow-x:auto; padding:20px 4px;}
+  .pnode{
+    flex:1; min-width:130px; border:1px solid var(--line); background:var(--panel); padding:14px 12px;
+    text-align:center; position:relative;
+  }
+  .pnode .pt{font-family:var(--font-d); font-weight:600; font-size:12.5px;}
+  .pnode .ps{font-family:var(--font-m); font-size:10px; color:var(--text-faint); margin-top:4px;}
+  .parrow{color:var(--text-faint); font-size:18px; padding:0 8px; flex-shrink:0;}
+  .pnode.hive{border-color:var(--brass); color:var(--brass);}
+  .pnode.hive .pt{color:var(--brass);}
+
+  /* ---------- layers ---------- */
+  .layer-card{cursor:pointer;}
+  .layer-num{font-family:var(--font-m); color:var(--blue); font-size:11px;}
+  .layer-body{max-height:0; overflow:hidden; transition:max-height .25s ease; font-size:12.5px; color:var(--text-dim);}
+  .layer-card.open .layer-body{max-height:220px; margin-top:10px;}
+  .layer-body ul{padding-left:18px; margin-top:6px;}
+  .layer-body li{margin-bottom:3px;}
+
+  /* ---------- threat ladder ---------- */
+  .ladder{display:flex; flex-direction:column; gap:6px; margin-top:16px;}
+  .rung{display:flex; align-items:center; gap:10px; border:1px solid var(--line); padding:9px 12px; font-family:var(--font-m); font-size:11.5px;}
+  .rung .rn{width:22px; height:22px; border:1px solid var(--line); display:flex; align-items:center; justify-content:center; font-size:11px; flex-shrink:0;}
+  .rung.lv0 .rn{border-color:var(--s0); color:var(--s0);} .rung.lv1 .rn{border-color:var(--s1); color:var(--s1);}
+  .rung.lv2 .rn{border-color:var(--s2); color:var(--s2);} .rung.lv3 .rn{border-color:var(--s3); color:var(--s3);}
+  .rung.lv4 .rn{border-color:var(--s4); color:var(--s4);}
+  .rung .rt{color:var(--text); flex-shrink:0; width:150px;}
+  .rung .rd{color:var(--text-faint);}
+  .rung.current{background:var(--panel-alt);}
+
+  /* ---------- prototype map ---------- */
+  .map-wrap{display:grid; grid-template-columns:1.6fr 1fr; gap:20px;}
+  @media(max-width:860px){.map-wrap{grid-template-columns:1fr;}}
+  #map-info{min-height:230px;}
+  .node-dot{cursor:pointer;}
+  .node-dot circle{transition:.15s;}
+  .node-dot:hover circle{stroke:var(--blue);}
+  .info-empty{color:var(--text-faint); font-family:var(--font-m); font-size:12px;}
+
+  /* ---------- simulator ---------- */
+  .sim-picker{display:flex; flex-direction:column; gap:6px;}
+  .sim-btn{
+    text-align:left; background:var(--panel); border:1px solid var(--line); color:var(--text-dim);
+    padding:11px 13px; font-size:12.5px; font-family:var(--font-b);
+  }
+  .sim-btn .sb-t{color:var(--text); font-weight:500; display:block; margin-bottom:2px;}
+  .sim-btn:hover{border-color:var(--blue);}
+  .sim-btn.running{border-color:var(--brass); color:var(--brass);}
+  .console{
+    background:#0e1116; border:1px solid var(--line); padding:14px; font-family:var(--font-m); font-size:11.5px;
+    height:340px; overflow-y:auto; display:flex; flex-direction:column; gap:5px;
+  }
+  .console .ln{color:var(--text-dim); white-space:pre-wrap;}
+  .console .ln .ts{color:var(--text-faint); margin-right:8px;}
+  .console .ln.hi{color:var(--blue);}
+  .console .ln.warn{color:var(--s1);}
+  .console .ln.crit{color:var(--s3);}
+  .console .ln.ok{color:var(--s0);}
+  .status-strip{display:flex; gap:10px; flex-wrap:wrap; margin-top:14px;}
+  .status-strip .badge{font-size:10px;}
+
+  /* ---------- access ---------- */
+  table{width:100%; border-collapse:collapse; font-size:12.5px;}
+  th,td{padding:9px 10px; border-bottom:1px solid var(--line); text-align:left;}
+  th{font-family:var(--font-m); font-size:10px; letter-spacing:.8px; text-transform:uppercase; color:var(--text-faint);}
+  td{color:var(--text-dim);}
+  .stat-pill{font-family:var(--font-m); font-size:10px; padding:2px 8px; border:1px solid var(--line);}
+  .stat-pill.active{color:var(--s0); border-color:var(--s0);}
+  .stat-pill.disabled{color:var(--s3); border-color:var(--s3);}
+  .btn{
+    font-family:var(--font-m); font-size:10.5px; letter-spacing:.5px; padding:6px 10px; background:none;
+    border:1px solid var(--line); color:var(--text-dim); text-transform:uppercase;
+  }
+  .btn:hover{border-color:var(--blue); color:var(--blue);}
+  .btn.danger:hover{border-color:var(--s3); color:var(--s3);}
+  .form-row{display:flex; gap:10px; align-items:center; margin:14px 0; flex-wrap:wrap;}
+  select,input[type=text]{
+    background:var(--panel-alt); border:1px solid var(--line); color:var(--text); font-family:var(--font-m);
+    font-size:12px; padding:8px 10px;
+  }
+  .guest-out{font-family:var(--font-m); font-size:12px; padding:12px; border:1px dashed var(--blue); color:var(--blue); margin-top:10px; display:none;}
+
+  /* ---------- energy ---------- */
+  .mode-row{display:flex; gap:8px; flex-wrap:wrap; margin-bottom:20px;}
+  .mode-btn{padding:9px 16px; border:1px solid var(--line); background:var(--panel); color:var(--text-dim); font-family:var(--font-m); font-size:11px; letter-spacing:1px;}
+  .mode-btn.active{border-color:var(--blue); color:var(--blue); background:var(--panel-alt);}
+  .device{border:1px solid var(--line); padding:14px; background:var(--panel);}
+  .device .dv-t{font-family:var(--font-d); font-weight:600; font-size:13px;}
+  .device .dv-s{font-family:var(--font-m); font-size:11px; margin-top:6px;}
+  .device .dv-s.on{color:var(--s0);} .device .dv-s.off{color:var(--text-faint);} .device .dv-s.mid{color:var(--s1);} .device .dv-s.alert{color:var(--s2);}
+  .ebar-row{display:flex; align-items:center; gap:10px; margin-top:6px;}
+  .ebar-track{flex:1; height:6px; background:var(--panel-alt); border:1px solid var(--line);}
+  .ebar-fill{height:100%; background:var(--blue);}
+
+  /* ---------- cyber flow ---------- */
+  .cflow{display:flex; flex-direction:column; gap:0; max-width:520px;}
+  .cnode{border:1px solid var(--line); background:var(--panel); padding:12px 14px; display:flex; align-items:center; gap:12px;}
+  .cnode .cn{width:26px; height:26px; border:1px solid var(--line); display:flex; align-items:center; justify-content:center; font-family:var(--font-m); font-size:11px; flex-shrink:0;}
+  .cnode .ct{font-family:var(--font-d); font-weight:600; font-size:13px;}
+  .cnode .cs{font-family:var(--font-m); font-size:10.5px; color:var(--text-faint);}
+  .cconn{width:1px; height:18px; background:var(--line); margin-left:26px;}
+  .cnode.active{border-color:var(--brass);} .cnode.active .cn{border-color:var(--brass); color:var(--brass);}
+  .cnode.done{border-color:var(--s0);} .cnode.done .cn{border-color:var(--s0); color:var(--s0);}
+
+  /* ---------- footer ---------- */
+  footer{border-top:1px solid var(--line); padding:22px 26px; font-family:var(--font-m); font-size:10.5px; color:var(--text-faint); text-align:center;}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="brand">
+    <div class="brand-mark">N</div>
+    <div>
+      <div class="brand-name">NIVASA</div>
+      <div class="brand-sub">INSPIRE‑MANAK STUDENT PROTOTYPE CONCEPT</div>
+    </div>
+  </div>
+  <div class="hdr-badges">
+    <div class="badge"><span class="dot" id="hdr-mode-dot">●</span> MODE: <span id="hdr-mode">HOME</span></div>
+    <div class="badge"><span class="dot s0" id="hdr-threat-dot"></span> THREAT: <span id="hdr-threat">LEVEL 0 — NORMAL</span></div>
+    <div class="badge"><span class="dot online" id="hdr-conn-dot"></span> HIVE: <span id="hdr-conn">ONLINE</span></div>
+  </div>
+</header>
+
+<nav id="tabnav"></nav>
+
+<main id="main"></main>
+
+<footer>
+  NIVASA — HYBRID INTELLIGENT VERIFICATION &amp; EXECUTION (H.I.V.E.) · CONCEPT PROTOTYPE FOR INSPIRE‑MANAK, NOT A DEPLOYED PRODUCT · ALL SIMULATIONS SHOWN ARE CONCEPT DEMONSTRATIONS WITH ILLUSTRATIVE SAMPLE DATA
+</footer>
+
+<script>
+/* ============================= DATA ============================= */
+
+const TABS = [
+  {id:'overview', label:'Overview'},
+  {id:'architecture', label:'HIVE Architecture'},
+  {id:'map', label:'Prototype Map'},
+  {id:'simulate', label:'Simulations'},
+  {id:'access', label:'Identity & Access'},
+  {id:'energy', label:'Energy Modes'},
+  {id:'cyber', label:'Cybersecurity'},
+  {id:'log', label:'Event Log'},
+];
+
+const THREAT_LEVELS = [
+  {n:0, name:'NORMAL', color:'s0', desc:'No unusual sensor activity. Standard automation and low-power monitoring.'},
+  {n:1, name:'SUSPICIOUS', color:'s1', desc:'A single sensor signal is unconfirmed. Relevant camera activates for verification.'},
+  {n:2, name:'UNAUTHORIZED', color:'s2', desc:'Presence detected without a matching identity credential. HIVE escalates monitoring.'},
+  {n:3, name:'CONFIRMED INTRUSION', color:'s3', desc:'Two or more independent sensor signals agree. Multiple cameras record; homeowner notified for verification.'},
+  {n:4, name:'EMERGENCY', color:'s4', desc:'Maximum predefined response. Emergency-service escalation only proceeds after authenticated user confirmation.'},
+];
+
+const state = {
+  mode:'HOME',
+  threat:0,
+  online:true,
+  simRunning:false,
+};
+
+let eventLog = [
+  {t:'08:42:11', type:'ACCESS', level:'L0', desc:'RFID tag #A‑014 verified at front door — access granted', who:'System'},
+  {t:'13:05:47', type:'PERIMETER', level:'L1', desc:'Optical perimeter interrupted, height estimate 0.6 m — classified as possible pet/animal', who:'HIVE'},
+  {t:'19:58:03', type:'MODE', level:'—', desc:'Home mode → Night mode (scheduled transition)', who:'System'},
+  {t:'21:14:22', type:'ACCESS', level:'L0', desc:'Guest credential #G‑003 issued, valid 4 hours', who:'Homeowner (app)'},
+  {t:'23:41:09', type:'SENSOR FUSION', level:'L2', desc:'Motion + door sensor triggered with no matching identity — camera 2 activated', who:'HIVE'},
+  {t:'23:41:38', type:'VERIFICATION', level:'L2', desc:'Homeowner reviewed clip — confirmed known visitor, threat level reset', who:'Homeowner (app)'},
+  {t:'02:12:55', type:'CYBERSECURITY', level:'—', desc:'Unusual outbound connection pattern flagged — network isolation engaged', who:'HIVE'},
+  {t:'02:14:10', type:'CYBERSECURITY', level:'—', desc:'User authenticated locally — system reconnected, incident logged', who:'Homeowner'},
+];
+
+/* ============================= SHELL ============================= */
+
+function renderNav(){
+  const nav = document.getElementById('tabnav');
+  nav.innerHTML = TABS.map(t=>`<button data-tab="${t.id}">${t.label}</button>`).join('');
+  nav.querySelectorAll('button').forEach(b=>b.addEventListener('click',()=>showTab(b.dataset.tab)));
+}
+
+function showTab(id){
+  document.querySelectorAll('#tabnav button').forEach(b=>b.classList.toggle('active', b.dataset.tab===id));
+  document.querySelectorAll('main section').forEach(s=>s.classList.toggle('active', s.id==='sec-'+id));
+  if(id==='log') renderLog();
+}
+
+function updateHeader(){
+  document.getElementById('hdr-mode').textContent = state.mode;
+  const t = THREAT_LEVELS[state.threat];
+  document.getElementById('hdr-threat').textContent = `LEVEL ${t.n} — ${t.name}`;
+  const td = document.getElementById('hdr-threat-dot');
+  td.className = 'dot ' + t.color;
+  document.getElementById('hdr-conn').textContent = state.online ? 'ONLINE' : 'ISOLATED';
+  document.getElementById('hdr-conn-dot').className = 'dot ' + (state.online ? 'online' : 'isolated');
+}
+
+/* ============================= OVERVIEW ============================= */
+
+function buildOverview(){
+  return `
+  <div class="hero">
+    <div>
+      <div class="eyebrow">INSPIRE‑MANAK · Class 10 Engineering Concept Prototype</div>
+      <h1 class="hero-title">NIVASA</h1>
+      <div class="hero-full">Intelligent Home Automation, Protection &amp; Multi‑Factor Security System</div>
+      <p style="color:var(--text-dim); max-width:600px;">Most home systems handle security, automation, access control and energy management as separate products with separate apps. NIVASA proposes a single, modular architecture for all four — while keeping every critical decision under human verification, and keeping core security running even if the internet connection is deliberately cut off.</p>
+      <div class="hive-chip">H.I.V.E. &nbsp;·&nbsp; HYBRID INTELLIGENT VERIFICATION &amp; EXECUTION</div>
+      <div class="stat-row">
+        <div class="stat"><div class="num">5</div><div class="lbl">Security layers</div></div>
+        <div class="stat"><div class="num">5</div><div class="lbl">Threat levels</div></div>
+        <div class="stat"><div class="num">5</div><div class="lbl">Operating modes</div></div>
+        <div class="stat"><div class="num">2</div><div class="lbl">Connectivity states</div></div>
+      </div>
+    </div>
+    <div class="spec">
+      <div class="tag">Design philosophy</div>
+      <div class="card-title">HIVE assists. It does not replace the homeowner.</div>
+      <p class="card-body">Sensors feed a primary security logic layer, which HIVE interprets, classifies and summarises. HIVE recommends and notifies — it does not silently execute critical actions like unlocking a door, contacting emergency services, or disabling all monitoring. Those require the homeowner's authenticated confirmation.</p>
+      <div class="disclaimer">This is a design concept for a science exhibition. No claims are made that any feature described is already built, tested or deployed.</div>
+    </div>
+  </div>
+
+  <div class="grid g2" style="margin-bottom:16px;">
+    <div class="spec">
+      <div class="tag">Problem</div>
+      <div class="card-title">Fragmented systems, fragmented trust</div>
+      <p class="card-body">Security cameras, door locks, energy timers and access cards are usually bought as unrelated products. They don't share sensor data, so a genuine intrusion can look like four separate minor alerts instead of one confirmed event — and none of them keep working usefully once the home's internet connection is attacked or cut.</p>
+    </div>
+    <div class="spec">
+      <div class="tag">Proposed solution</div>
+      <div class="card-title">One controller, layered logic, human sign‑off</div>
+      <p class="card-body">NIVASA fuses signals from identity, motion, perimeter and camera sensors before escalating a threat level. HIVE classifies and explains what it sees; the homeowner authorises anything consequential. If the network itself is attacked, the system isolates and keeps core protection running locally.</p>
+    </div>
+  </div>
+
+  <div class="grid g4">
+    <div class="spec"><div class="card-title">Modular</div><p class="card-body">Sensor and control modules can be added per room/budget rather than requiring a full system purchase.</p></div>
+    <div class="spec"><div class="card-title">Human‑controlled</div><p class="card-body">Locks, alarms and emergency escalation always route through homeowner verification.</p></div>
+    <div class="spec"><div class="card-title">Offline‑resilient</div><p class="card-block card-body">Core detection and logging continue locally even during a network isolation event.</p></div>
+    <div class="spec"><div class="card-title">Affordable</div><p class="card-body">Built around commodity sensors (RFID, PIR motion, optical/LiDAR) rather than proprietary hardware.</p></div>
+  </div>
+
+  <h2 style="margin:34px 0 14px; font-size:17px;">Future scope</h2>
+  <div class="grid g3">
+    <div class="spec"><p class="card-body">Field-testing sensor fusion accuracy across weather and lighting conditions.</p></div>
+    <div class="spec"><p class="card-body">Extending guest-credential logic to shared/rented housing scenarios.</p></div>
+    <div class="spec"><p class="card-body">Evaluating low-power hardware (ESP32-class controllers) for a physical prototype build.</p></div>
+  </div>
+  `;
+}
+
+/* ============================= ARCHITECTURE ============================= */
+
+function buildArchitecture(){
+  const layers = [
+    {n:1, title:'Identity', items:['RFID card / tag','Smartphone credential','Facial recognition (assistive, not sole factor)','Multi-factor verification before high-trust actions','Lost-card disabling from the app','Temporary guest credentials with auto-expiry']},
+    {n:2, title:'Detection', items:['Motion sensors (PIR)','Cameras (adaptive activation)','Door / window contact sensors','Optical perimeter sensors','LiDAR-based spatial and person mapping']},
+    {n:3, title:'Sensor Fusion', items:['Combines multiple independent signals before escalating a threat level','Reduces false alarms from any single sensor','Confidence increases only when signals corroborate each other']},
+    {n:4, title:'Threat Levels', items:['LEVEL 0 — Normal','LEVEL 1 — Suspicious','LEVEL 2 — Unauthorized','LEVEL 3 — Confirmed intrusion','LEVEL 4 — Emergency']},
+    {n:5, title:'Response', items:['Notification to homeowner','Adaptive recording (scales with threat level)','Security lighting','Controlled locking','Audible alarm','User verification step','Emergency-service escalation only after authenticated confirmation']},
+  ];
+  return `
+  <div class="page-head">
+    <div class="eyebrow">System architecture</div>
+    <h2>H.I.V.E. — Hybrid Intelligent Verification &amp; Execution</h2>
+    <p>HIVE is the central interpretation layer. It never sits between a sensor and a wall — every path from detection to a critical action passes through classification, then a human verification checkpoint.</p>
+  </div>
+
+  <div class="spec" style="margin-bottom:28px;">
+    <div class="tag">Working principle</div>
+    <div class="pipeline">
+      <div class="pnode"><div class="pt">Sensors</div><div class="ps">Raw signal capture</div></div>
+      <div class="parrow">→</div>
+      <div class="pnode"><div class="pt">Primary Security Logic</div><div class="ps">Rule-based first pass</div></div>
+      <div class="parrow">→</div>
+      <div class="pnode hive"><div class="pt">HIVE</div><div class="ps">Classify · summarise · recommend</div></div>
+      <div class="parrow">→</div>
+      <div class="pnode"><div class="pt">User Verification</div><div class="ps">Homeowner reviews &amp; decides</div></div>
+      <div class="parrow">→</div>
+      <div class="pnode"><div class="pt">Critical Action</div><div class="ps">Executed only after authorisation</div></div>
+    </div>
+  </div>
+
+  <h3 style="margin-bottom:12px; font-size:15px;">Five security layers <span class="eyebrow" style="margin-left:8px;">click a layer to expand</span></h3>
+  <div class="grid g2" id="layer-list" style="margin-bottom:30px;"></div>
+
+  <h3 style="margin-bottom:12px; font-size:15px;">Threat level ladder</h3>
+  <div class="ladder">
+    ${THREAT_LEVELS.map(l=>`
+      <div class="rung lv${l.n}">
+        <div class="rn">${l.n}</div>
+        <div class="rt">${l.name}</div>
+        <div class="rd">${l.desc}</div>
+      </div>`).join('')}
+  </div>
+  `;
+}
+
+function mountLayers(){
+  const layers = [
+    {n:1, title:'Identity', items:['RFID card / tag','Smartphone credential','Facial recognition (assistive, not sole factor)','Multi-factor verification before high-trust actions','Lost-card disabling from the app','Temporary guest credentials with auto-expiry']},
+    {n:2, title:'Detection', items:['Motion sensors (PIR)','Cameras (adaptive activation)','Door / window contact sensors','Optical perimeter sensors','LiDAR-based spatial and person mapping']},
+    {n:3, title:'Sensor Fusion', items:['Combines multiple independent signals before escalating a threat level','Reduces false alarms from any single sensor','Confidence increases only when signals corroborate each other']},
+    {n:4, title:'Threat Levels', items:['LEVEL 0 — Normal','LEVEL 1 — Suspicious','LEVEL 2 — Unauthorized','LEVEL 3 — Confirmed intrusion','LEVEL 4 — Emergency']},
+    {n:5, title:'Response', items:['Notification to homeowner','Adaptive recording (scales with threat level)','Security lighting','Controlled locking','Audible alarm','User verification step','Emergency-service escalation only after authenticated confirmation']},
+  ];
+  const wrap = document.getElementById('layer-list');
+  wrap.innerHTML = layers.map((l,i)=>`
+    <div class="spec layer-card" data-i="${i}">
+      <div class="layer-num">LAYER ${l.n}</div>
+      <div class="card-title">${l.title}</div>
+      <div class="layer-body"><ul>${l.items.map(it=>`<li>${it}</li>`).join('')}</ul></div>
+    </div>`).join('');
+  wrap.querySelectorAll('.layer-card').forEach(c=>c.addEventListener('click',()=>c.classList.toggle('open')));
+}
+
+/* ============================= PROTOTYPE MAP ============================= */
+
+const MAP_NODES = {
+  perimeter:{title:'Smart perimeter', desc:'Non-contact optical / LiDAR boundary. Detects intrusion, estimates height for child-safety and pet/cattle discrimination, and reads ambient conditions. Not an electrified barrier.'},
+  rfid:{title:'RFID access point', desc:'Front-door reader for RFID tags and smartphone credentials. First factor in the identity layer; feeds directly into HIVE for verification.'},
+  cam1:{title:'Camera — entrance', desc:'Low-power standby by default. Activates automatically at Suspicious level or above.'},
+  cam2:{title:'Camera — perimeter', desc:'Covers the side approach; part of the adaptive multi-camera recording response at Confirmed Intrusion level.'},
+  motion1:{title:'Motion sensor — hallway', desc:'PIR sensor feeding the sensor-fusion engine. A single motion trigger alone does not raise the threat level.'},
+  lidar:{title:'LiDAR unit', desc:'Assistive spatial mapping and height estimation. Any suspicious-object flag is AI-assisted and requires human verification — LiDAR cannot reliably identify weapons on its own.'},
+  hive:{title:'HIVE controller', desc:'Central classification and coordination unit. Runs locally; retains core security logic even when isolated from the internet.'},
+  energy:{title:'Energy management node', desc:'Controls lights, fans and selected appliances according to the active mode (Home / Away / Night / Alert / Emergency).'},
+  phone:{title:"Homeowner's smartphone", desc:'Receives notifications, hosts the verification and emergency-confirmation controls, and issues/revokes guest credentials.'},
+  comm:{title:'Communication path', desc:'Local-first link between HIVE and the smartphone app; falls back to on-device operation if the internet path is isolated.'},
+};
+
+function buildMap(){
+  return `
+  <div class="page-head">
+    <div class="eyebrow">Conceptual layout</div>
+    <h2>Prototype system map</h2>
+    <p>A simplified top-down schematic of a single-storey concept home. Click any labelled component to read its function.</p>
+  </div>
+  <div class="map-wrap">
+    <div class="spec">
+      <svg viewBox="0 0 640 430" width="100%" style="display:block;">
+        <rect x="20" y="20" width="600" height="390" fill="none" stroke="#3d4652" stroke-width="1.5" stroke-dasharray="6 5"/>
+        <text x="30" y="14" font-family="IBM Plex Mono" font-size="10" fill="#5b6270">PERIMETER BOUNDARY</text>
+        <rect x="80" y="70" width="480" height="300" fill="none" stroke="#5d8fbe" stroke-width="1.2"/>
+        <line x1="80" y1="220" x2="320" y2="220" stroke="#2a323c" stroke-width="1"/>
+        <line x1="320" y1="70" x2="320" y2="370" stroke="#2a323c" stroke-width="1"/>
+        <line x1="320" y1="220" x2="560" y2="220" stroke="#2a323c" stroke-width="1"/>
+        <text x="100" y="140" font-family="IBM Plex Mono" font-size="10" fill="#5b6270">LIVING</text>
+        <text x="100" y="300" font-family="IBM Plex Mono" font-size="10" fill="#5b6270">BEDROOM</text>
+        <text x="380" y="140" font-family="IBM Plex Mono" font-size="10" fill="#5b6270">KITCHEN</text>
+        <text x="380" y="300" font-family="IBM Plex Mono" font-size="10" fill="#5b6270">UTILITY</text>
+
+        <g id="node-hive" class="node-dot" data-k="hive">
+          <circle cx="320" cy="220" r="16" fill="#181d24" stroke="#d0975a" stroke-width="1.5"/>
+          <text x="320" y="224" text-anchor="middle" font-family="Space Grotesk" font-weight="700" font-size="10" fill="#d0975a">HIVE</text>
+        </g>
+
+        <g id="node-rfid" class="node-dot" data-k="rfid">
+          <circle cx="320" cy="70" r="8" fill="#181d24" stroke="#5d8fbe" stroke-width="1.5"/>
+          <text x="320" y="55" text-anchor="middle" font-family="IBM Plex Mono" font-size="9" fill="#8b93a0">RFID</text>
+        </g>
+        <g id="node-cam1" class="node-dot" data-k="cam1">
+          <circle cx="90" cy="80" r="7" fill="#181d24" stroke="#5d8fbe" stroke-width="1.5"/>
+          <text x="90" y="65" text-anchor="middle" font-family="IBM Plex Mono" font-size="9" fill="#8b93a0">C1</text>
+        </g>
+        <g id="node-cam2" class="node-dot" data-k="cam2">
+          <circle cx="550" cy="360" r="7" fill="#181d24" stroke="#5d8fbe" stroke-width="1.5"/>
+          <text x="550" y="378" text-anchor="middle" font-family="IBM Plex Mono" font-size="9" fill="#8b93a0">C2</text>
+        </g>
+        <g id="node-motion1" class="node-dot" data-k="motion1">
+          <circle cx="200" cy="220" r="7" fill="#181d24" stroke="#5d8fbe" stroke-width="1.5"/>
+          <text x="200" y="238" text-anchor="middle" font-family="IBM Plex Mono" font-size="9" fill="#8b93a0">M1</text>
+        </g>
+        <g id="node-lidar" class="node-dot" data-k="lidar">
+          <circle cx="70" cy="220" r="7" fill="#181d24" stroke="#5d8fbe" stroke-width="1.5"/>
+          <text x="45" y="224" text-anchor="middle" font-family="IBM Plex Mono" font-size="9" fill="#8b93a0">LiDAR</text>
+        </g>
+        <g id="node-energy" class="node-dot" data-k="energy">
+          <circle cx="450" cy="130" r="7" fill="#181d24" stroke="#5d8fbe" stroke-width="1.5"/>
+          <text x="450" y="115" text-anchor="middle" font-family="IBM Plex Mono" font-size="9" fill="#8b93a0">ENERGY</text>
+        </g>
+        <g id="node-perimeter" class="node-dot" data-k="perimeter">
+          <circle cx="320" cy="20" r="6" fill="#181d24" stroke="#4c9a6a" stroke-width="1.5"/>
+        </g>
+
+        <line x1="336" y1="220" x2="600" y2="220" stroke="#2a323c" stroke-width="1" stroke-dasharray="3 4"/>
+        <g id="node-phone" class="node-dot" data-k="phone">
+          <rect x="596" y="204" width="24" height="34" rx="4" fill="#181d24" stroke="#5d8fbe" stroke-width="1.5"/>
+          <text x="608" y="256" text-anchor="middle" font-family="IBM Plex Mono" font-size="9" fill="#8b93a0">APP</text>
+        </g>
+        <g id="node-comm" class="node-dot" data-k="comm">
+          <text x="468" y="212" text-anchor="middle" font-family="IBM Plex Mono" font-size="8.5" fill="#5b6270">COMM LINK</text>
+        </g>
+      </svg>
+    </div>
+    <div class="spec" id="map-info">
+      <div class="info-empty">◇ Click a labelled component on the map to view its function.</div>
+    </div>
+  </div>
+  `;
+}
+
+function mountMap(){
+  document.querySelectorAll('.node-dot').forEach(n=>{
+    n.addEventListener('click',()=>{
+      const k = n.dataset.k;
+      const d = MAP_NODES[k];
+      document.getElementById('map-info').innerHTML = `
+        <div class="tag">Component</div>
+        <div class="card-title">${d.title}</div>
+        <p class="card-body">${d.desc}</p>`;
+    });
+  });
+}
+
+/* ============================= SIMULATIONS ============================= */
+
+const SIMULATIONS = {
+  entry:{
+    label:'Authorized entry',
+    desc:'RFID detected → identity verified → access granted.',
+    steps:[
+      {log:'RFID tag #A‑014 detected at front-door reader.', cls:'hi'},
+      {log:'HIVE cross-checking credential against registered identities…'},
+      {log:'Identity match confirmed: registered occupant.', cls:'ok', threat:0},
+      {log:'Access granted. Door lock released for 6 seconds.', cls:'ok'},
+      {log:'Event logged. No verification action required from homeowner.'},
+    ]
+  },
+  suspicious:{
+    label:'Suspicious event',
+    desc:'Motion detected → camera activated → unknown person → threat rises.',
+    steps:[
+      {log:'Motion sensor (hallway) triggered.', threat:0},
+      {log:'HIVE activates nearby camera for verification.', threat:1, cls:'warn'},
+      {log:'Facial recognition finds no match in registered identities.', threat:1, cls:'warn'},
+      {log:'Threat level raised: LEVEL 1 — SUSPICIOUS.', cls:'warn'},
+      {log:'Notification sent to homeowner app with camera snapshot.', cls:'warn'},
+    ]
+  },
+  fusion:{
+    label:'Sensor fusion',
+    desc:'Motion + perimeter interruption + unknown identity → stronger confidence.',
+    steps:[
+      {log:'Motion sensor triggered.', threat:1, cls:'warn'},
+      {log:'Optical perimeter interruption detected 4 seconds later.', threat:1, cls:'warn'},
+      {log:'No matching identity credential presented.', threat:2, cls:'warn'},
+      {log:'HIVE fuses 3 independent signals — confidence high.', cls:'crit'},
+      {log:'Threat level raised: LEVEL 2 — UNAUTHORIZED.', threat:2, cls:'crit'},
+      {log:'Homeowner verification requested before further escalation.', cls:'crit'},
+    ]
+  },
+  recording:{
+    label:'Adaptive recording',
+    desc:'Recording behaviour scales automatically with threat level.',
+    steps:[
+      {log:'LEVEL 0 — single camera in low-power monitoring mode.', threat:0},
+      {log:'LEVEL 1 reached — relevant camera activates at full resolution.', threat:1, cls:'warn'},
+      {log:'LEVEL 3 reached — multiple cameras begin synchronized recording.', threat:3, cls:'crit'},
+      {log:'Recording tagged and stored locally for the incident window.', cls:'crit'},
+    ]
+  },
+  homeaway:{
+    label:'Home → Away transition',
+    desc:'Mode switch shown with linked view on the Energy Modes tab.',
+    steps:[
+      {log:'Homeowner sets mode to AWAY from the app.', mode:'AWAY', cls:'hi'},
+      {log:'Non-essential lights and fans powered down.'},
+      {log:'Selected appliances switched to standby.'},
+      {log:'Security monitoring remains fully active throughout.', cls:'ok'},
+      {log:'See the Energy Modes tab for the live device state.'},
+    ]
+  },
+  cyberattack:{
+    label:'Cyberattack response',
+    desc:'Online → isolation → local operation → verified reconnection.',
+    steps:[
+      {log:'Unusual outbound connection pattern detected.', cls:'warn'},
+      {log:'Homeowner alerted via local notification.', cls:'warn'},
+      {log:'Network isolation engaged — HIVE disconnects from the internet.', online:false, cls:'crit'},
+      {log:'Local HIVE security functions continue uninterrupted.', cls:'ok'},
+      {log:'Incident data stored in local encrypted storage.'},
+      {log:'Homeowner authenticates locally to authorize reconnection.', cls:'hi'},
+      {log:'Reconnected. Incident report queued for the predefined cybersecurity contact.', online:true, cls:'ok'},
+    ]
+  },
+  lostcard:{
+    label:'Lost RFID card',
+    desc:'Card disabled from the app → access denied.',
+    steps:[
+      {log:'Homeowner marks RFID tag #A‑014 as lost in the app.', cls:'hi'},
+      {log:'HIVE immediately revokes the credential.', cls:'warn'},
+      {log:'Simulated re-use of tag #A‑014 at the front door…'},
+      {log:'Access denied — credential is disabled.', cls:'crit'},
+      {log:'Attempt logged and flagged for homeowner review.'},
+    ]
+  },
+  guest:{
+    label:'Temporary guest credential',
+    desc:'Credential created → valid for limited time → auto-expires.',
+    steps:[
+      {log:'Homeowner issues guest credential #G‑009, valid 4 hours.', cls:'hi'},
+      {log:'Guest credential accepted at the front-door reader.', cls:'ok'},
+      {log:'Countdown active — see the Identity & Access tab for the live timer.'},
+      {log:'On expiry, credential automatically becomes invalid — no manual step required.'},
+    ]
+  },
+  emergency:{
+    label:'Emergency confirmation',
+    desc:'HIVE never escalates to emergency services without user sign-off.',
+    steps:[
+      {log:'Two independent sensors confirm forced entry.', threat:3, cls:'crit'},
+      {log:'Threat level raised: LEVEL 4 — EMERGENCY (proposed).', threat:4, cls:'crit'},
+      {log:'HIVE prepares an emergency-escalation recommendation — NOT yet sent.', cls:'warn'},
+      {log:'Awaiting homeowner authentication and confirmation…'},
+      {log:'Homeowner confirms via app. Emergency escalation authorized.', cls:'ok'},
+      {log:'Predefined emergency contact notified with incident summary.', cls:'ok'},
+    ]
+  },
+};
+
+function buildSimulate(){
+  return `
+  <div class="page-head">
+    <div class="eyebrow">Concept demonstrations</div>
+    <h2>Interactive simulations</h2>
+    <p>These are scripted concept walkthroughs of NIVASA's intended logic, not live sensor data. Pick a scenario and run it.</p>
+  </div>
+  <div class="disclaimer">SIMULATION MODE — all events below are pre-scripted demonstration data illustrating intended system behaviour.</div>
+  <div class="map-wrap" style="grid-template-columns:1fr 1.3fr;">
+    <div class="sim-picker" id="sim-list"></div>
+    <div>
+      <div class="console" id="sim-console">
+        <div class="ln">◇ Select a simulation on the left, then press Run.</div>
+      </div>
+      <div class="status-strip">
+        <div class="badge">MODE: <span id="sim-mode-out">HOME</span></div>
+        <div class="badge">THREAT: <span id="sim-threat-out">LEVEL 0</span></div>
+        <div class="badge">HIVE: <span id="sim-conn-out">ONLINE</span></div>
+      </div>
+    </div>
+  </div>
+  `;
+}
+
+function mountSimulate(){
+  const list = document.getElementById('sim-list');
+  list.innerHTML = Object.entries(SIMULATIONS).map(([k,s])=>`
+    <button class="sim-btn" data-k="${k}">
+      <span class="sb-t">${s.label}</span>${s.desc}
+    </button>`).join('');
+  list.querySelectorAll('.sim-btn').forEach(b=>b.addEventListener('click',()=>runSimulation(b.dataset.k, b)));
+}
+
+function runSimulation(key, btnEl){
+  if(state.simRunning) return;
+  state.simRunning = true;
+  document.querySelectorAll('.sim-btn').forEach(b=>b.classList.remove('running'));
+  btnEl.classList.add('running');
+  const sim = SIMULATIONS[key];
+  const console_ = document.getElementById('sim-console');
+  console_.innerHTML = `<div class="ln hi">▸ RUNNING SIMULATION: ${sim.label.toUpperCase()}</div>`;
+
+  let i = 0;
+  function step(){
+    if(i >= sim.steps.length){
+      console_.innerHTML += `<div class="ln ok">▸ SIMULATION COMPLETE</div>`;
+      console_.scrollTop = console_.scrollHeight;
+      state.simRunning = false;
+      btnEl.classList.remove('running');
+      eventLog.unshift({t:nowStr(), type:'SIMULATION', level:'—', desc:`${sim.label} — demonstration completed`, who:'System (concept demo)'});
+      return;
+    }
+    const s = sim.steps[i];
+    const time = nowStr();
+    console_.innerHTML += `<div class="ln ${s.cls||''}"><span class="ts">${time}</span>${s.log}</div>`;
+    console_.scrollTop = console_.scrollHeight;
+    if(s.threat !== undefined){ state.threat = s.threat; updateHeader(); }
+    if(s.mode !== undefined){ state.mode = s.mode; updateHeader(); setEnergyMode(s.mode, true); }
+    if(s.online !== undefined){ state.online = s.online; updateHeader(); }
+    document.getElementById('sim-mode-out').textContent = state.mode;
+    document.getElementById('sim-threat-out').textContent = 'LEVEL ' + state.threat;
+    document.getElementById('sim-conn-out').textContent = state.online ? 'ONLINE' : 'ISOLATED';
+    i++;
+    setTimeout(step, 900);
+  }
+  step();
+}
+
+function nowStr(){
+  const d = new Date();
+  return d.toTimeString().slice(0,8);
+}
+
+/* ============================= IDENTITY & ACCESS ============================= */
+
+let credentials = [
+  {id:'A-014', type:'RFID card', holder:'Homeowner', status:'active'},
+  {id:'A-021', type:'Smartphone credential', holder:'Homeowner', status:'active'},
+  {id:'A-030', type:'RFID card', holder:'Family member', status:'active'},
+];
+let guestCred = null;
+let guestInterval = null;
+
+function buildAccess(){
+  return `
+  <div class="page-head">
+    <div class="eyebrow">Layer 1</div>
+    <h2>Identity &amp; access control</h2>
+    <p>Manage registered credentials, disable a lost card, and issue a time-limited guest credential — illustrative of the concept's access-control logic.</p>
+  </div>
+  <div class="map-wrap" style="grid-template-columns:1.2fr 1fr;">
+    <div class="spec">
+      <div class="tag">Registered credentials</div>
+      <table id="cred-table"></table>
+    </div>
+    <div class="spec">
+      <div class="tag">Issue guest credential</div>
+      <p class="card-body">Guest credentials are automatically time-boxed and cannot be manually extended without re-issuing from the app.</p>
+      <div class="form-row">
+        <select id="guest-duration">
+          <option value="1">1 hour</option>
+          <option value="4" selected>4 hours</option>
+          <option value="24">24 hours</option>
+        </select>
+        <button class="btn" onclick="issueGuest()">Generate credential</button>
+      </div>
+      <div id="guest-out" class="guest-out"></div>
+    </div>
+  </div>
+  `;
+}
+
+function mountAccess(){
+  renderCredTable();
+}
+
+function renderCredTable(){
+  const tbl = document.getElementById('cred-table');
+  if(!tbl) return;
+  tbl.innerHTML = `
+    <tr><th>ID</th><th>Type</th><th>Holder</th><th>Status</th><th></th></tr>
+    ${credentials.map(c=>`
+      <tr>
+        <td>${c.id}</td><td>${c.type}</td><td>${c.holder}</td>
+        <td><span class="stat-pill ${c.status}">${c.status.toUpperCase()}</span></td>
+        <td>${c.status==='active' ? `<button class="btn danger" onclick="disableCred('${c.id}')">Disable</button>` : '—'}</td>
+      </tr>`).join('')}
+  `;
+}
+
+function disableCred(id){
+  const c = credentials.find(c=>c.id===id);
+  if(c){
+    c.status = 'disabled';
+    renderCredTable();
+    eventLog.unshift({t:nowStr(), type:'ACCESS', level:'—', desc:`Credential ${id} (${c.type}) disabled by homeowner — reported lost`, who:'Homeowner (app)'});
+  }
+}
+
+function issueGuest(){
+  const hrs = parseInt(document.getElementById('guest-duration').value,10);
+  if(guestInterval) clearInterval(guestInterval);
+  const id = 'G-' + Math.floor(100+Math.random()*899);
+  const expiry = Date.now() + hrs*3600*1000;
+  guestCred = {id, expiry};
+  const out = document.getElementById('guest-out');
+  out.style.display = 'block';
+  eventLog.unshift({t:nowStr(), type:'ACCESS', level:'—', desc:`Guest credential ${id} issued, valid ${hrs}h`, who:'Homeowner (app)'});
+  function tick(){
+    const remain = guestCred.expiry - Date.now();
+    if(remain <= 0){
+      out.innerHTML = `Guest credential <b>${id}</b> — EXPIRED. Access automatically revoked.`;
+      clearInterval(guestInterval);
+      eventLog.unshift({t:nowStr(), type:'ACCESS', level:'—', desc:`Guest credential ${id} expired automatically`, who:'System'});
+      return;
+    }
+    const h = Math.floor(remain/3600000), m = Math.floor((remain%3600000)/60000), s = Math.floor((remain%60000)/1000);
+    out.innerHTML = `Guest credential <b>${id}</b> — active, expires in ${h}h ${m}m ${s}s`;
+  }
+  tick();
+  guestInterval = setInterval(tick, 1000);
+}
+
+/* ============================= ENERGY ============================= */
+
+const ENERGY_PROFILES = {
+  HOME:{lights:['on','Automated per room'], fans:['on','Comfort mode'], plugs:['on','Full availability'], security:['mid','Standard monitoring'], locks:['off','Manual as usual'], draw:62},
+  AWAY:{lights:['off','Off except entry'], fans:['off','Powered down'], plugs:['mid','Standby only'], security:['alert','Active monitoring'], locks:['on','Engaged'], draw:24},
+  NIGHT:{lights:['mid','Dimmed / motion-linked'], fans:['mid','Low speed'], plugs:['mid','Non-essential only'], security:['alert','Enhanced protection'], locks:['on','Engaged'], draw:31},
+  ALERT:{lights:['on','Security lighting engaged'], fans:['off','Powered down'], plugs:['mid','Non-essential only'], security:['alert','Increased monitoring'], locks:['on','Engaged'], draw:48},
+  EMERGENCY:{lights:['on','Full illumination'], fans:['off','Powered down'], plugs:['off','Non-essential cut'], security:['alert','Maximum response'], locks:['on','Pending human confirmation'], draw:55},
+};
+
+function buildEnergy(){
+  return `
+  <div class="page-head">
+    <div class="eyebrow">Automation layer</div>
+    <h2>Energy &amp; mode management</h2>
+    <p>Switch between operating modes to see how NIVASA's concept logic would adjust lighting, appliances and security posture. Values shown are illustrative, not measured data.</p>
+  </div>
+  <div class="mode-row" id="mode-row"></div>
+  <div class="grid g3" id="device-grid" style="margin-bottom:20px;"></div>
+  <div class="spec">
+    <div class="tag">Relative energy draw (illustrative)</div>
+    <div class="ebar-row"><span style="width:70px; font-family:var(--font-m); font-size:11px;" id="draw-label">62%</span>
+      <div class="ebar-track"><div class="ebar-fill" id="draw-fill" style="width:62%;"></div></div>
+    </div>
+  </div>
+  `;
+}
+
+function mountEnergy(){
+  const row = document.getElementById('mode-row');
+  row.innerHTML = Object.keys(ENERGY_PROFILES).map(m=>`<button class="mode-btn" data-m="${m}">${m}</button>`).join('');
+  row.querySelectorAll('.mode-btn').forEach(b=>b.addEventListener('click',()=>setEnergyMode(b.dataset.m)));
+  setEnergyMode(state.mode, true);
+}
+
+function setEnergyMode(mode, silent){
+  state.mode = mode;
+  const row = document.getElementById('mode-row');
+  if(row) row.querySelectorAll('.mode-btn').forEach(b=>b.classList.toggle('active', b.dataset.m===mode));
+  const p = ENERGY_PROFILES[mode];
+  const grid = document.getElementById('device-grid');
+  if(grid){
+    const devices = [
+      {n:'Lights', v:p.lights}, {n:'Fans', v:p.fans}, {n:'Plugs / appliances', v:p.plugs},
+      {n:'Security monitoring', v:p.security}, {n:'Door locks', v:p.locks},
+    ];
+    grid.innerHTML = devices.map(d=>`
+      <div class="device">
+        <div class="dv-t">${d.n}</div>
+        <div class="dv-s ${d.v[0]}">${d.v[0].toUpperCase()} — ${d.v[1]}</div>
+      </div>`).join('');
+    document.getElementById('draw-label').textContent = p.draw + '%';
+    document.getElementById('draw-fill').style.width = p.draw + '%';
+  }
+  updateHeader();
+  if(!silent) eventLog.unshift({t:nowStr(), type:'MODE', level:'—', desc:`Mode switched to ${mode}`, who:'Homeowner (app)'});
+}
+
+/* ============================= CYBERSECURITY ============================= */
+
+const CYBER_STEPS = [
+  {t:'Online', s:'Remote app connectivity and monitoring available'},
+  {t:'Cyber threat detected', s:'Unusual traffic pattern flagged by HIVE'},
+  {t:'User alert', s:'Homeowner notified locally and via app'},
+  {t:'Network isolation', s:'HIVE disconnects from the internet'},
+  {t:'Local HIVE security continues', s:'Detection, logging and alarms keep running on-device'},
+  {t:'User verification', s:'Homeowner authenticates locally to authorize next step'},
+  {t:'Reconnection / incident report', s:'Reconnects only if authorized; report sent to predefined contact'},
+];
+
+function buildCyber(){
+  return `
+  <div class="page-head">
+    <div class="eyebrow">Defense in depth</div>
+    <h2>Cybersecurity &amp; network isolation</h2>
+    <p>NIVASA is designed around two operating states rather than a claim of being unbreakable. AES‑256 is proposed for sensitive stored data and relevant communications, as one layer among several — not a guarantee of total security on its own.</p>
+  </div>
+  <div class="map-wrap" style="grid-template-columns:1fr 1fr;">
+    <div>
+      <div class="cflow" id="cyber-flow"></div>
+      <button class="btn" style="margin-top:16px;" onclick="runCyberSim()">Simulate cyberattack response</button>
+    </div>
+    <div class="spec">
+      <div class="tag">Defense-in-depth notes</div>
+      <ul style="padding-left:18px; color:var(--text-dim); font-size:13px; line-height:1.8;">
+        <li>Isolation is automatic; reconnection is not — it always waits for an authenticated homeowner.</li>
+        <li>Local encrypted storage retains incident data captured during isolation.</li>
+        <li>AES‑256 protects data at rest / in transit; it is one control among several, not a complete security guarantee.</li>
+        <li>This is described as defense-in-depth against evolving threats — not a claim of being quantum-proof or unbreakable.</li>
+      </ul>
+    </div>
+  </div>
+  `;
+}
+
+function mountCyber(){
+  renderCyberFlow(-1);
+}
+
+function renderCyberFlow(activeIdx){
+  const wrap = document.getElementById('cyber-flow');
+  if(!wrap) return;
+  wrap.innerHTML = CYBER_STEPS.map((s,i)=>{
+    const cls = i<activeIdx ? 'done' : (i===activeIdx ? 'active' : '');
+    const conn = i>0 ? '<div class="cconn"></div>' : '';
+    return `${conn}<div class="cnode ${cls}"><div class="cn">${i+1}</div><div><div class="ct">${s.t}</div><div class="cs">${s.s}</div></div></div>`;
+  }).join('');
+}
+
+let cyberRunning = false;
+function runCyberSim(){
+  if(cyberRunning) return;
+  cyberRunning = true;
+  let i = 0;
+  function step(){
+    renderCyberFlow(i);
+    if(i===3){ state.online = false; updateHeader(); }
+    if(i===6){ state.online = true; updateHeader(); eventLog.unshift({t:nowStr(), type:'CYBERSECURITY', level:'—', desc:'Network isolation resolved — authorized reconnection, incident reported', who:'System (concept demo)'}); }
+    i++;
+    if(i <= CYBER_STEPS.length){
+      setTimeout(step, 900);
+    } else {
+      cyberRunning = false;
+    }
+  }
+  eventLog.unshift({t:nowStr(), type:'CYBERSECURITY', level:'—', desc:'Cyberattack simulation started — see Cybersecurity tab', who:'System (concept demo)'});
+  step();
+}
+
+/* ============================= EVENT LOG ============================= */
+
+function buildLog(){
+  return `
+  <div class="page-head">
+    <div class="eyebrow">Historical record</div>
+    <h2>Event history</h2>
+    <p>Demonstration data illustrating the kind of unified log NIVASA's design intends to produce across security, access and energy events.</p>
+  </div>
+  <div class="spec">
+    <table id="log-table"></table>
+  </div>
+  `;
+}
+
+function renderLog(){
+  const tbl = document.getElementById('log-table');
+  if(!tbl) return;
+  tbl.innerHTML = `
+    <tr><th>Time</th><th>Type</th><th>Level</th><th>Description</th><th>Source</th></tr>
+    ${eventLog.map(e=>`<tr><td>${e.t}</td><td>${e.type}</td><td>${e.level}</td><td>${e.desc}</td><td>${e.who}</td></tr>`).join('')}
+  `;
+}
+
+/* ============================= INIT ============================= */
+
+function init(){
+  renderNav();
+  const main = document.getElementById('main');
+  main.innerHTML = `
+    <section id="sec-overview" class="active">${buildOverview()}</section>
+    <section id="sec-architecture">${buildArchitecture()}</section>
+    <section id="sec-map">${buildMap()}</section>
+    <section id="sec-simulate">${buildSimulate()}</section>
+    <section id="sec-access">${buildAccess()}</section>
+    <section id="sec-energy">${buildEnergy()}</section>
+    <section id="sec-cyber">${buildCyber()}</section>
+    <section id="sec-log">${buildLog()}</section>
+  `;
+  mountLayers();
+  mountMap();
+  mountSimulate();
+  mountAccess();
+  mountEnergy();
+  mountCyber();
+  showTab('overview');
+  updateHeader();
+}
+
+init();
+</script>
+</body>
+</html>

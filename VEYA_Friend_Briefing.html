@@ -1,0 +1,808 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>PROJECT VEYA — Technical Briefing</title>
+<style>
+/* ============================================================
+   PROJECT VEYA — BRIEFING
+   Design language: dark aerospace-engineering documentation.
+   Single accent (signal amber), monospace technical labels,
+   corner-bracket "viewfinder" framing as the signature motif.
+   ============================================================ */
+
+:root{
+  --bg:#0A0C0F;
+  --bg-alt:#0D1013;
+  --surface:#12161B;
+  --surface-2:#171C22;
+  --border:#262C34;
+  --border-strong:#3B434D;
+  --text:#E8EAED;
+  --text-dim:#9199A3;
+  --text-faint:#565D66;
+  --accent:#DD9A45;
+  --accent-soft:rgba(221,154,69,0.14);
+  --accent-line:rgba(221,154,69,0.35);
+  --steel:#6C8494;
+  --good:#7FB88A;
+  --mono: ui-monospace,"SF Mono","Cascadia Mono","Roboto Mono",Consolas,monospace;
+  --sans: -apple-system,BlinkMacSystemFont,"Segoe UI",Helvetica,Arial,sans-serif;
+  --dur:0.6s;
+}
+
+*{box-sizing:border-box;}
+html,body{height:100%;}
+body{
+  margin:0;
+  background:var(--bg);
+  color:var(--text);
+  font-family:var(--sans);
+  overflow:hidden;
+  -webkit-font-smoothing:antialiased;
+}
+::selection{background:var(--accent-soft);color:var(--accent);}
+
+canvas#bgCanvas{
+  position:fixed; inset:0; width:100%; height:100%;
+  z-index:0; opacity:0.5; pointer-events:none;
+}
+
+a{color:var(--accent);}
+
+/* ---------- HUD FRAME (signature element) ---------- */
+.hud-corner{
+  position:fixed; width:22px; height:22px; z-index:40; pointer-events:none;
+  border-color:var(--border-strong);
+}
+.hud-corner.tl{top:14px; left:14px; border-top:1px solid; border-left:1px solid;}
+.hud-corner.tr{top:14px; right:14px; border-top:1px solid; border-right:1px solid;}
+.hud-corner.bl{bottom:14px; left:14px; border-bottom:1px solid; border-left:1px solid;}
+.hud-corner.br{bottom:14px; right:14px; border-bottom:1px solid; border-right:1px solid;}
+
+.hud-top{
+  position:fixed; top:0; left:0; right:0; z-index:30;
+  display:flex; align-items:center; justify-content:space-between;
+  padding:22px 40px; font-family:var(--mono); font-size:11px;
+  letter-spacing:0.12em; color:var(--text-faint); pointer-events:none;
+}
+.hud-top .label{color:var(--text-dim);}
+.hud-top .label b{color:var(--accent); font-weight:600;}
+.hud-status{display:flex; align-items:center; gap:8px;}
+.hud-dot{width:6px; height:6px; border-radius:50%; background:var(--accent); box-shadow:0 0 8px var(--accent);
+  animation:pulse 2.4s ease-in-out infinite;}
+@keyframes pulse{0%,100%{opacity:1;}50%{opacity:0.3;}}
+
+.hud-bottom{
+  position:fixed; bottom:0; left:0; right:0; z-index:30;
+  padding:0 40px 20px; pointer-events:none;
+}
+.progress-track{
+  height:1px; background:var(--border); position:relative; width:100%;
+}
+.progress-fill{
+  position:absolute; top:0; left:0; height:100%; background:var(--accent);
+  transition:width 0.5s cubic-bezier(.6,0,.2,1);
+}
+
+/* ---------- SIDEBAR NAV ---------- */
+.sidenav{
+  position:fixed; top:50%; left:40px; transform:translateY(-50%);
+  z-index:35; display:flex; flex-direction:column; gap:14px;
+}
+.sidenav button{
+  all:unset; cursor:pointer; display:flex; align-items:center; gap:10px;
+  font-family:var(--mono); font-size:10px; color:var(--text-faint);
+  transition:color 0.3s;
+}
+.sidenav button .num{width:16px;}
+.sidenav button .bar{width:16px; height:1px; background:var(--border-strong); transition:all 0.3s;}
+.sidenav button .name{
+  opacity:0; max-width:0; overflow:hidden; white-space:nowrap; transition:all 0.3s; letter-spacing:0.08em;
+}
+.sidenav button:hover .name, .sidenav button.active .name{opacity:1; max-width:160px; margin-left:2px;}
+.sidenav button.active{color:var(--accent);}
+.sidenav button.active .bar{width:26px; background:var(--accent);}
+.sidenav button:hover{color:var(--text);}
+
+@media (max-width: 860px){
+  .sidenav{display:none;}
+}
+
+/* ---------- NAV ARROWS ---------- */
+.navbtn{
+  position:fixed; top:50%; transform:translateY(-50%); z-index:35;
+  width:46px; height:46px; border:1px solid var(--border-strong); background:rgba(18,22,27,0.7);
+  backdrop-filter:blur(6px);
+  color:var(--text-dim); cursor:pointer; font-family:var(--mono); font-size:16px;
+  display:flex; align-items:center; justify-content:center; transition:all 0.25s;
+}
+.navbtn:hover{border-color:var(--accent); color:var(--accent);}
+.navbtn:disabled{opacity:0.2; cursor:default; border-color:var(--border);}
+.navbtn:disabled:hover{color:var(--text-dim);}
+#prevBtn{left:24px;}
+#nextBtn{right:24px;}
+@media (max-width:640px){
+  .navbtn{width:38px;height:38px;}
+  #prevBtn{left:8px;} #nextBtn{right:8px;}
+}
+
+/* ---------- STAGE / PAGES ---------- */
+.stage{position:relative; z-index:10; height:100vh; width:100%;}
+.page{
+  position:absolute; inset:0;
+  display:flex; flex-direction:column; align-items:center; justify-content:center;
+  padding:110px 100px 90px;
+  opacity:0; visibility:hidden; pointer-events:none;
+  transform:translateY(18px);
+  transition:opacity 0.5s ease, transform 0.6s cubic-bezier(.2,.8,.2,1);
+  overflow-y:auto;
+}
+.page.active{
+  opacity:1; visibility:visible; pointer-events:auto; transform:translateY(0);
+}
+.page::-webkit-scrollbar{width:5px;}
+.page::-webkit-scrollbar-thumb{background:var(--border-strong);}
+
+@media (max-width:860px){
+  .page{padding:100px 24px 80px;}
+}
+
+.page-inner{max-width:1040px; width:100%; margin:0 auto;}
+
+.eyebrow{
+  font-family:var(--mono); font-size:11px; letter-spacing:0.22em; color:var(--accent);
+  text-transform:uppercase; display:flex; align-items:center; gap:10px; margin-bottom:18px;
+}
+.eyebrow::before{content:""; width:22px; height:1px; background:var(--accent);}
+
+h1.pagetitle{
+  font-size:clamp(2.1rem,4.4vw,3.4rem); font-weight:700; letter-spacing:-0.02em;
+  line-height:1.05; margin:0 0 20px;
+}
+p.lede{
+  font-size:1.08rem; line-height:1.7; color:var(--text-dim); max-width:720px; margin:0 0 34px;
+}
+p.body-text{font-size:0.98rem; line-height:1.75; color:var(--text-dim); margin:0 0 16px;}
+
+.quote{
+  font-family:var(--sans); font-style:italic; font-size:1.15rem; color:var(--text);
+  border-left:2px solid var(--accent); padding:6px 0 6px 20px; margin:22px 0 30px; max-width:640px;
+  line-height:1.6;
+}
+
+/* Tags for concept status */
+.tag{
+  font-family:var(--mono); font-size:9.5px; letter-spacing:0.1em; padding:3px 8px;
+  border:1px solid var(--border-strong); border-radius:2px; display:inline-block; color:var(--text-dim);
+  text-transform:uppercase; margin:0 6px 6px 0;
+}
+.tag--concept{color:var(--good); border-color:rgba(127,184,138,0.4);}
+.tag--proposed{color:var(--accent); border-color:var(--accent-line);}
+.tag--future{color:var(--steel); border-color:rgba(108,132,148,0.45);}
+
+/* ---------- Generic flow diagram (vertical chain) ---------- */
+.flow-v{display:flex; flex-direction:column; align-items:stretch; gap:0; margin:26px 0;}
+.fnode{
+  border:1px solid var(--border-strong); background:var(--surface);
+  padding:14px 18px; border-radius:2px; position:relative;
+}
+.fnode .flabel{font-family:var(--mono); font-size:9.5px; color:var(--text-faint); letter-spacing:0.12em; margin-bottom:4px;}
+.fnode .ftitle{font-size:0.98rem; font-weight:600; color:var(--text);}
+.fnode .fdesc{font-size:0.82rem; color:var(--text-dim); margin-top:4px; line-height:1.5;}
+.fnode.accent{border-color:var(--accent-line); box-shadow:0 0 0 1px var(--accent-line) inset;}
+.farrow{
+  align-self:center; font-family:var(--mono); color:var(--accent-line); font-size:14px; padding:5px 0;
+}
+
+/* horizontal flow */
+.flow-h{display:flex; align-items:center; gap:0; flex-wrap:wrap; margin:26px 0;}
+.flow-h .fnode{flex:1 1 140px; text-align:center; min-width:120px;}
+.flow-h .farrow{padding:0 8px;}
+@media (max-width:700px){ .flow-h{flex-direction:column;} .flow-h .farrow{transform:rotate(90deg);} }
+
+/* module grid */
+.mod-grid{
+  display:grid; grid-template-columns:repeat(auto-fill,minmax(190px,1fr)); gap:10px; margin:26px 0 30px;
+}
+.mod{
+  border:1px solid var(--border); background:var(--surface); padding:14px 14px 16px; border-radius:2px;
+  transition:border-color 0.3s, transform 0.3s;
+}
+.mod:hover{border-color:var(--accent-line); transform:translateY(-2px);}
+.mod .mi{font-family:var(--mono); font-size:9px; color:var(--accent); letter-spacing:0.12em;}
+.mod .mt{font-weight:600; font-size:0.92rem; margin-top:5px;}
+.mod .md{font-size:0.78rem; color:var(--text-faint); margin-top:5px; line-height:1.45;}
+
+/* comparison table */
+table.comp{width:100%; border-collapse:collapse; margin:24px 0 8px; font-size:0.88rem;}
+table.comp th,table.comp td{border:1px solid var(--border); padding:11px 14px; text-align:left; vertical-align:top;}
+table.comp th{
+  font-family:var(--mono); font-size:10px; letter-spacing:0.1em; color:var(--accent);
+  background:var(--surface-2); text-transform:uppercase; font-weight:600;
+}
+table.comp td{color:var(--text-dim);}
+table.comp tr:nth-child(odd) td{background:rgba(255,255,255,0.012);}
+
+/* code block */
+.codeblock{
+  background:#0D1114; border:1px solid var(--border-strong); border-radius:3px; padding:18px 20px;
+  font-family:var(--mono); font-size:12.5px; color:#B9C4CF; line-height:1.65; overflow-x:auto; margin:20px 0;
+}
+.codeblock .k{color:var(--accent);}
+.codeblock .s{color:var(--good);}
+.codeblock .c{color:var(--text-faint);}
+
+/* layered stack (hardware) */
+.stack{display:flex; flex-direction:column; gap:6px; margin:26px 0;}
+.slab{
+  border:1px solid var(--border-strong); background:var(--surface); padding:13px 18px;
+  display:flex; justify-content:space-between; align-items:center; border-radius:2px;
+}
+.slab .st{font-weight:600; font-size:0.92rem;}
+.slab .sd{font-size:0.78rem; color:var(--text-faint); font-family:var(--mono);}
+.slab-arrow{align-self:center; color:var(--text-faint); font-family:var(--mono); font-size:12px;}
+
+/* three-column card row */
+.tri{display:grid; grid-template-columns:repeat(auto-fit,minmax(220px,1fr)); gap:16px; margin:26px 0;}
+.tricard{border:1px solid var(--border); background:var(--surface); padding:20px; border-radius:2px;}
+.tricard h4{margin:0 0 8px; font-family:var(--mono); font-size:11px; letter-spacing:0.1em; color:var(--accent); text-transform:uppercase;}
+.tricard ul{margin:0; padding-left:16px; color:var(--text-dim); font-size:0.85rem; line-height:1.8;}
+
+/* expandable section */
+.expand{border:1px solid var(--border); border-radius:2px; margin:10px 0; overflow:hidden; background:var(--surface);}
+.expand summary{
+  padding:13px 18px; cursor:pointer; font-family:var(--mono); font-size:11.5px; letter-spacing:0.06em;
+  color:var(--text); display:flex; justify-content:space-between; align-items:center; list-style:none;
+}
+.expand summary::-webkit-details-marker{display:none;}
+.expand summary::after{content:"+"; color:var(--accent); font-size:16px;}
+.expand[open] summary::after{content:"–";}
+.expand .exp-body{padding:0 18px 16px; font-size:0.85rem; color:var(--text-dim); line-height:1.7;}
+
+/* pill row */
+.pillrow{display:flex; flex-wrap:wrap; gap:8px; margin:18px 0 26px;}
+.pill{
+  border:1px solid var(--border-strong); border-radius:20px; padding:6px 14px;
+  font-size:0.8rem; color:var(--text-dim); font-family:var(--mono);
+}
+
+/* ---------- COVER PAGE ---------- */
+#page-1{padding-top:0;}
+.cover-wrap{text-align:center; max-width:760px;}
+.cover-mark{
+  font-family:var(--mono); font-size:11px; letter-spacing:0.4em; color:var(--text-faint);
+  margin-bottom:26px; text-transform:uppercase;
+}
+.cover-title{
+  font-size:clamp(3rem,9vw,6.2rem); font-weight:800; letter-spacing:-0.03em; line-height:0.95;
+  margin:0 0 22px; color:var(--text);
+}
+.cover-title span{color:var(--accent);}
+.cover-sub{font-size:clamp(1rem,2vw,1.3rem); color:var(--text-dim); font-weight:400; margin-bottom:30px;}
+.cover-quote{font-style:italic; color:var(--text-dim); font-size:1.02rem; max-width:520px; margin:0 auto 40px; line-height:1.6;}
+.cover-cta{
+  all:unset; cursor:pointer; font-family:var(--mono); font-size:12px; letter-spacing:0.15em;
+  color:var(--bg); background:var(--accent); padding:14px 30px; border-radius:2px;
+  text-transform:uppercase; transition:all 0.25s; display:inline-block;
+}
+.cover-cta:hover{background:#EDAE5E; transform:translateY(-2px);}
+.cover-meta{
+  margin-top:50px; display:flex; gap:26px; justify-content:center; font-family:var(--mono);
+  font-size:10px; color:var(--text-faint); letter-spacing:0.08em; flex-wrap:wrap;
+}
+.cover-meta b{color:var(--text-dim);}
+
+/* final page status animation */
+.statusline{font-family:var(--mono); font-size:13px; color:var(--text-dim); margin-bottom:6px;}
+.statusline .ok{color:var(--good);}
+.blink{display:inline-block; width:8px; animation:blink 1s steps(1) infinite;}
+@keyframes blink{50%{opacity:0;}}
+.final-tagline{
+  font-size:clamp(1.8rem,4vw,3rem); font-weight:800; letter-spacing:-0.02em; margin-top:26px;
+  opacity:0; animation:none;
+}
+.page.active .final-tagline{animation:fadeUp 1s 1.6s ease forwards;}
+@keyframes fadeUp{from{opacity:0; transform:translateY(14px);} to{opacity:1; transform:translateY(0);}}
+
+/* reveal-on-enter for content blocks */
+.reveal{opacity:0; transform:translateY(10px); transition:opacity 0.6s ease, transform 0.6s ease;}
+.page.active .reveal{opacity:1; transform:translateY(0);}
+.page.active .reveal:nth-child(1){transition-delay:0.05s;}
+.page.active .reveal:nth-child(2){transition-delay:0.12s;}
+.page.active .reveal:nth-child(3){transition-delay:0.19s;}
+.page.active .reveal:nth-child(4){transition-delay:0.26s;}
+.page.active .reveal:nth-child(5){transition-delay:0.33s;}
+.page.active .reveal:nth-child(6){transition-delay:0.4s;}
+
+.sr-only{position:absolute; width:1px; height:1px; overflow:hidden; clip:rect(0,0,0,0);}
+
+@media (prefers-reduced-motion: reduce){
+  *{animation-duration:0.01ms !important; transition-duration:0.01ms !important;}
+}
+
+footer.pagefoot{
+  margin-top:34px; font-family:var(--mono); font-size:9.5px; color:var(--text-faint); letter-spacing:0.08em;
+}
+</style>
+</head>
+<body>
+
+<canvas id="bgCanvas" aria-hidden="true"></canvas>
+
+<div class="hud-corner tl"></div>
+<div class="hud-corner tr"></div>
+<div class="hud-corner bl"></div>
+<div class="hud-corner br"></div>
+
+<div class="hud-top">
+  <div class="label">VEYA <b>//</b> TECHNICAL BRIEFING</div>
+  <div class="hud-status"><span class="hud-dot"></span><span id="hudPage">PAGE 01 / 12 — COVER</span></div>
+</div>
+
+<nav class="sidenav" id="sidenav" aria-label="Page navigation"></nav>
+
+<button class="navbtn" id="prevBtn" aria-label="Previous page">&larr;</button>
+<button class="navbtn" id="nextBtn" aria-label="Next page">&rarr;</button>
+
+<div class="hud-bottom">
+  <div class="progress-track"><div class="progress-fill" id="progressFill" style="width:8.3%"></div></div>
+</div>
+
+<main class="stage" id="stage">
+
+<!-- 01 — COVER -->
+<section class="page active" id="page-1" data-title="Cover">
+  <div class="cover-wrap">
+    <div class="cover-mark">CONFIDENTIAL BRIEFING · REV 0.3</div>
+    <h1 class="cover-title">PROJECT <span>VEYA</span></h1>
+    <p class="cover-sub">A Modular Intelligence &amp; Computing Ecosystem</p>
+    <p class="cover-quote">&ldquo;Not just an AI. An ecosystem built around intelligence, extensibility and control.&rdquo;</p>
+    <button class="cover-cta" id="exploreBtn">Explore VEYA &rarr;</button>
+    <div class="cover-meta">
+      <div><b>STATUS</b> · CONCEPT / DESIGN PHASE</div>
+      <div><b>SCOPE</b> · SOFTWARE + HARDWARE</div>
+      <div><b>DOC</b> · FRIEND-FACING TECHNICAL OVERVIEW</div>
+    </div>
+  </div>
+</section>
+
+<!-- 02 — WHAT IS VEYA -->
+<section class="page" id="page-2" data-title="What is VEYA">
+  <div class="page-inner">
+    <div class="eyebrow reveal">01 · ORIENTATION</div>
+    <h1 class="pagetitle reveal">What is VEYA?</h1>
+    <p class="lede reveal">In plain terms first: VEYA is a system where an AI doesn't just talk to you — it sits at the center of a small ecosystem, with tools, extensions and even physical hardware it can call on to actually get things done.</p>
+
+    <div class="quote reveal">&ldquo;Think of VEYA as an operating ecosystem for an intelligent assistant.&rdquo;</div>
+
+    <div class="reveal">
+      <div class="flow-v">
+        <div class="fnode"><div class="flabel">LAYER 01</div><div class="ftitle">USER</div><div class="fdesc">The person setting goals, giving instructions, approving actions.</div></div>
+        <div class="farrow">↓</div>
+        <div class="fnode accent"><div class="flabel">LAYER 02</div><div class="ftitle">VEYA CORE</div><div class="fdesc">The runtime that receives intent and coordinates everything below it.</div></div>
+        <div class="farrow">↓</div>
+        <div class="fnode"><div class="flabel">LAYER 03</div><div class="ftitle">AI / AGENTS</div><div class="fdesc">Reasoning and planning — deciding what needs to happen.</div></div>
+        <div class="farrow">↓</div>
+        <div class="fnode"><div class="flabel">LAYER 04</div><div class="ftitle">TOOLS / PLUGINS / MODS</div><div class="fdesc">The extensible capability layer — what VEYA is able to do.</div></div>
+        <div class="farrow">↓</div>
+        <div class="fnode"><div class="flabel">LAYER 05</div><div class="ftitle">HARDWARE / OS / EXTERNAL SYSTEMS</div><div class="fdesc">Where intent finally becomes a real-world effect.</div></div>
+      </div>
+    </div>
+    <p class="body-text reveal">A chatbot answers questions. VEYA is meant to be the substrate underneath an assistant — the part that lets intelligence reach outward into tools, files, devices and user-built extensions, under rules it can't quietly step around.</p>
+  </div>
+</section>
+
+<!-- 03 — VEYA CORE -->
+<section class="page" id="page-3" data-title="The VEYA Core">
+  <div class="page-inner">
+    <div class="eyebrow reveal">02 · ARCHITECTURE</div>
+    <h1 class="pagetitle reveal">The VEYA Core</h1>
+    <p class="lede reveal">The core is the central nervous system of VEYA — a set of coordinating modules, not one monolithic program. Each module has a narrow job.</p>
+
+    <div class="mod-grid reveal">
+      <div class="mod"><div class="mi">MOD·01</div><div class="mt">Core Runtime</div><div class="md">Boots and supervises every other module.</div></div>
+      <div class="mod"><div class="mi">MOD·02</div><div class="mt">AI Orchestrator</div><div class="md">Routes requests to the right model or agent.</div></div>
+      <div class="mod"><div class="mi">MOD·03</div><div class="mt">Agent Manager</div><div class="md">Spawns, tracks and retires active agents.</div></div>
+      <div class="mod"><div class="mi">MOD·04</div><div class="mt">Memory Layer</div><div class="md">Stores durable facts across sessions.</div></div>
+      <div class="mod"><div class="mi">MOD·05</div><div class="mt">Context Engine</div><div class="md">Assembles the working context for a task.</div></div>
+      <div class="mod"><div class="mi">MOD·06</div><div class="mt">Tool Manager</div><div class="md">Exposes callable tools to agents, safely.</div></div>
+      <div class="mod"><div class="mi">MOD·07</div><div class="mt">Plugin Manager</div><div class="md">Handles plugin lifecycle and permissions.</div></div>
+      <div class="mod"><div class="mi">MOD·08</div><div class="mt">Mod Manager</div><div class="md">Applies system-level behavior overrides.</div></div>
+      <div class="mod"><div class="mi">MOD·09</div><div class="mt">Security Layer</div><div class="md">Gatekeeps every sensitive action.</div></div>
+      <div class="mod"><div class="mi">MOD·10</div><div class="mt">Hardware Interface</div><div class="md">Bridges into the physical device layer.</div></div>
+      <div class="mod"><div class="mi">MOD·11</div><div class="mt">Event Bus</div><div class="md">Carries messages between all modules.</div></div>
+      <div class="mod"><div class="mi">MOD·12</div><div class="mt">Config System</div><div class="md">Holds user and system settings.</div></div>
+      <div class="mod"><div class="mi">MOD·13</div><div class="mt">Logging / Diagnostics</div><div class="md">Records what happened and why.</div></div>
+    </div>
+
+    <p class="body-text reveal" style="margin-top:6px;">Every request moves through the same disciplined pipeline — VEYA is deliberately designed to not blindly execute everything it's asked:</p>
+    <div class="flow-h reveal">
+      <div class="fnode"><div class="ftitle" style="font-size:0.82rem;">INPUT</div></div><div class="farrow">→</div>
+      <div class="fnode"><div class="ftitle" style="font-size:0.82rem;">CONTEXT</div></div><div class="farrow">→</div>
+      <div class="fnode"><div class="ftitle" style="font-size:0.82rem;">REASONING</div></div><div class="farrow">→</div>
+      <div class="fnode"><div class="ftitle" style="font-size:0.82rem;">TOOL / AGENT SELECT</div></div><div class="farrow">→</div>
+      <div class="fnode"><div class="ftitle" style="font-size:0.82rem;">EXECUTION</div></div><div class="farrow">→</div>
+      <div class="fnode"><div class="ftitle" style="font-size:0.82rem;">VERIFICATION</div></div><div class="farrow">→</div>
+      <div class="fnode accent"><div class="ftitle" style="font-size:0.82rem;">OUTPUT</div></div>
+    </div>
+  </div>
+</section>
+
+<!-- 04 — AI + AGENT ARCHITECTURE -->
+<section class="page" id="page-4" data-title="AI + Agent Architecture">
+  <div class="page-inner">
+    <div class="eyebrow reveal">03 · INTELLIGENCE</div>
+    <h1 class="pagetitle reveal">AI + Agent Architecture</h1>
+    <p class="lede reveal">Four different terms get used loosely in this space. VEYA treats them as distinct layers, not synonyms.</p>
+
+    <div class="tri reveal">
+      <div class="tricard"><h4>AI Model</h4><p style="color:var(--text-dim); font-size:0.85rem; line-height:1.6; margin:0;">The raw reasoning engine. It predicts and generates — it has no memory of its own and no ability to act on the world.</p></div>
+      <div class="tricard"><h4>AI Agent</h4><p style="color:var(--text-dim); font-size:0.85rem; line-height:1.6; margin:0;">A model wrapped with a role, tools and boundaries — it can plan and take a bounded set of actions.</p></div>
+      <div class="tricard"><h4>Agent System</h4><p style="color:var(--text-dim); font-size:0.85rem; line-height:1.6; margin:0;">Multiple agents coordinating on a shared task, each with a specialty.</p></div>
+      <div class="tricard"><h4>VEYA</h4><p style="color:var(--text-dim); font-size:0.85rem; line-height:1.6; margin:0;">The ecosystem that hosts, supervises and constrains the whole agent system.</p></div>
+    </div>
+
+    <p class="body-text reveal">The model supplies intelligence. The agent supplies <em>controlled</em> behavior — tools, permissions, and a defined job description.</p>
+
+    <div class="reveal" style="margin-top:10px;">
+      <div class="flow-v" style="max-width:420px; margin:20px auto;">
+        <div class="fnode accent" style="text-align:center;"><div class="ftitle">VEYA</div></div>
+        <div class="farrow">↓</div>
+        <div class="fnode" style="text-align:center;"><div class="ftitle">Orchestrator</div></div>
+        <div class="farrow">↓</div>
+      </div>
+      <div class="mod-grid" style="max-width:720px; margin:0 auto 10px; grid-template-columns:repeat(auto-fit,minmax(140px,1fr));">
+        <div class="mod" style="text-align:center;"><div class="mt">Planner Agent</div></div>
+        <div class="mod" style="text-align:center;"><div class="mt">Coding Agent</div></div>
+        <div class="mod" style="text-align:center;"><div class="mt">Research Agent</div></div>
+        <div class="mod" style="text-align:center;"><div class="mt">System Agent</div></div>
+        <div class="mod" style="text-align:center;"><div class="mt">Hardware Agent</div></div>
+        <div class="mod" style="text-align:center;"><div class="mt">Security Agent</div></div>
+      </div>
+    </div>
+    <span class="tag tag--proposed reveal">PROPOSED ARCHITECTURE</span>
+  </div>
+</section>
+
+<!-- 05 — PLUGIN SYSTEM -->
+<section class="page" id="page-5" data-title="Plugin System">
+  <div class="page-inner">
+    <div class="eyebrow reveal">04 · EXTENSIBILITY</div>
+    <h1 class="pagetitle reveal">The Plugin System</h1>
+    <p class="lede reveal">Not an "API integrations" list. Plugins extend what VEYA can <em>do</em> — each one hands the core a new capability, under permission.</p>
+
+    <div class="pillrow reveal">
+      <span class="pill">Web Plugin</span><span class="pill">Developer Plugin</span><span class="pill">File-System Plugin</span>
+      <span class="pill">Hardware Plugin</span><span class="pill">Database Plugin</span><span class="pill">Communication Plugin</span>
+      <span class="pill">Research Plugin</span><span class="pill">Custom User Plugin</span>
+    </div>
+
+    <div class="flow-h reveal">
+      <div class="fnode accent" style="text-align:center;"><div class="ftitle" style="font-size:0.85rem;">VEYA CORE</div></div><div class="farrow">→</div>
+      <div class="fnode" style="text-align:center;"><div class="ftitle" style="font-size:0.85rem;">Plugin Runtime</div></div><div class="farrow">→</div>
+      <div class="fnode" style="text-align:center;"><div class="ftitle" style="font-size:0.85rem;">Plugin Registry</div></div><div class="farrow">→</div>
+      <div class="fnode" style="text-align:center;"><div class="ftitle" style="font-size:0.85rem;">Permissions</div></div><div class="farrow">→</div>
+      <div class="fnode" style="text-align:center;"><div class="ftitle" style="font-size:0.85rem;">Plugin</div></div><div class="farrow">→</div>
+      <div class="fnode" style="text-align:center;"><div class="ftitle" style="font-size:0.85rem;">Capability</div></div>
+    </div>
+
+    <div class="reveal">
+      <details class="expand" open>
+        <summary>Plugin Lifecycle</summary>
+        <div class="exp-body">
+          Discovery → Installation → Activation → Permission grant → Sandboxed execution → Versioning &amp; updates → Core communication via the Event Bus → Deactivation / removal. A plugin never talks to the rest of the system directly — every call passes back through the core.
+        </div>
+      </details>
+    </div>
+    <span class="tag tag--proposed reveal">PROPOSED ARCHITECTURE</span>
+  </div>
+</section>
+
+<!-- 06 — MOD SYSTEM -->
+<section class="page" id="page-6" data-title="Mod System">
+  <div class="page-inner">
+    <div class="eyebrow reveal">05 · EXTENSIBILITY</div>
+    <h1 class="pagetitle reveal">Plugins vs. Mods</h1>
+    <p class="lede reveal">Related, but not the same thing.</p>
+
+    <div class="tri reveal">
+      <div class="tricard"><h4>Plugin</h4><p style="color:var(--text-dim); font-size:0.9rem; margin:0;">Adds a capability or tool to VEYA.</p></div>
+      <div class="tricard"><h4>Mod</h4><p style="color:var(--text-dim); font-size:0.9rem; margin:0;">Changes, extends or transforms how VEYA itself behaves or looks.</p></div>
+    </div>
+
+    <div class="tri reveal">
+      <div class="tricard"><h4>Plugin examples</h4><ul><li>Add browser access</li><li>Add GitHub integration</li><li>Add Arduino control</li></ul></div>
+      <div class="tricard"><h4>Mod examples</h4><ul><li>Change the UI</li><li>Change personality</li><li>Modify workflows</li><li>Add system behavior</li><li>Replace interface components</li><li>Add experimental features</li></ul></div>
+    </div>
+
+    <table class="comp reveal">
+      <tr><th>Plugin</th><th>Mod</th></tr>
+      <tr><td>Adds capability</td><td>Changes / extends the system</td></tr>
+      <tr><td>Usually isolated</td><td>Can affect core behavior</td></tr>
+      <tr><td>Tool-oriented</td><td>System-oriented</td></tr>
+      <tr><td>Permission controlled</td><td>Compatibility controlled</td></tr>
+    </table>
+  </div>
+</section>
+
+<!-- 07 — HARDWARE ARCHITECTURE -->
+<section class="page" id="page-7" data-title="Hardware Architecture">
+  <div class="page-inner">
+    <div class="eyebrow reveal">06 · HARDWARE</div>
+    <h1 class="pagetitle reveal">Hardware Architecture</h1>
+    <p class="lede reveal">VEYA can extend past software into a physical device — a layered stack, from compute down to the outside world.</p>
+
+    <div class="stack reveal">
+      <div class="slab"><span class="st">CPU / MCU</span><span class="sd">compute</span></div>
+      <div class="slab-arrow">↓</div>
+      <div class="slab"><span class="st">Memory</span><span class="sd">RAM</span></div>
+      <div class="slab-arrow">↓</div>
+      <div class="slab"><span class="st">Storage</span><span class="sd">flash</span></div>
+      <div class="slab-arrow">↓</div>
+      <div class="slab"><span class="st">Connectivity</span><span class="sd">Wi-Fi / BLE / USB</span></div>
+      <div class="slab-arrow">↓</div>
+      <div class="slab"><span class="st">Sensors</span><span class="sd">input</span></div>
+      <div class="slab-arrow">↓</div>
+      <div class="slab"><span class="st">Actuators</span><span class="sd">output</span></div>
+      <div class="slab-arrow">↓</div>
+      <div class="slab" style="border-color:var(--accent-line);"><span class="st">External Devices</span><span class="sd">the world</span></div>
+    </div>
+
+    <p class="body-text reveal">Possible components under consideration:</p>
+    <div class="pillrow reveal">
+      <span class="pill">MCU</span><span class="pill">SBC</span><span class="pill">Custom PCB</span><span class="pill">RAM</span>
+      <span class="pill">Flash / Storage</span><span class="pill">Wi-Fi</span><span class="pill">Bluetooth</span><span class="pill">USB</span>
+      <span class="pill">GPIO</span><span class="pill">Sensors</span><span class="pill">Displays</span><span class="pill">Microphones</span>
+      <span class="pill">Speakers</span><span class="pill">LEDs</span><span class="pill">Motors / Actuators</span>
+    </div>
+    <span class="tag tag--future reveal">FUTURE POSSIBILITY</span>
+  </div>
+</section>
+
+<!-- 08 — SOFTWARE / HARDWARE BRIDGE -->
+<section class="page" id="page-8" data-title="Software ↔ Hardware Bridge">
+  <div class="page-inner">
+    <div class="eyebrow reveal">07 · HARDWARE</div>
+    <h1 class="pagetitle reveal">Software ↔ Hardware Bridge</h1>
+    <p class="lede reveal">The AI never touches raw hardware directly. Everything routes through a controlled abstraction layer.</p>
+
+    <div class="flow-v reveal">
+      <div class="fnode" style="text-align:center;"><div class="ftitle">AI / Agent</div></div>
+      <div class="farrow">↓</div>
+      <div class="fnode accent" style="text-align:center;"><div class="ftitle">VEYA Core</div></div>
+      <div class="farrow">↓</div>
+      <div class="fnode" style="text-align:center;"><div class="ftitle">Hardware Abstraction Layer</div></div>
+      <div class="farrow">↓</div>
+      <div class="fnode" style="text-align:center;"><div class="ftitle">Device Driver / Protocol</div></div>
+      <div class="farrow">↓</div>
+      <div class="fnode" style="text-align:center;"><div class="ftitle">MCU / SBC</div></div>
+      <div class="farrow">↓</div>
+      <div class="fnode" style="text-align:center;"><div class="ftitle">Physical Hardware</div></div>
+    </div>
+
+    <p class="body-text reveal">Why bother with a middle layer? Because it lets the AI ask for an outcome ("show this text") without ever needing to know which exact chip or driver makes that happen — and it gives the security layer a single choke point to police.</p>
+
+    <div class="codeblock reveal"><span class="c">// conceptual hardware-facing calls — not a production API</span>
+<span class="k">read_sensor</span>(id)
+<span class="k">set_gpio</span>(pin, state)
+<span class="k">display_text</span>(text)
+<span class="k">play_audio</span>(clip)
+<span class="k">device_status</span>()</div>
+    <span class="tag tag--proposed reveal">PROPOSED ARCHITECTURE</span>
+  </div>
+</section>
+
+<!-- 09 — SECURITY -->
+<section class="page" id="page-9" data-title="Security + Control">
+  <div class="page-inner">
+    <div class="eyebrow reveal">08 · SECURITY</div>
+    <h1 class="pagetitle reveal">Security &amp; Control</h1>
+    <div class="quote reveal">&ldquo;Intelligence does not automatically mean authority.&rdquo;</div>
+
+    <div class="flow-h reveal">
+      <div class="fnode" style="text-align:center;"><div class="ftitle" style="font-size:0.82rem;">REQUEST</div></div><div class="farrow">→</div>
+      <div class="fnode" style="text-align:center;"><div class="ftitle" style="font-size:0.82rem;">AUTHENTICATION</div></div><div class="farrow">→</div>
+      <div class="fnode" style="text-align:center;"><div class="ftitle" style="font-size:0.82rem;">PERMISSION CHECK</div></div><div class="farrow">→</div>
+      <div class="fnode" style="text-align:center;"><div class="ftitle" style="font-size:0.82rem;">POLICY CHECK</div></div><div class="farrow">→</div>
+      <div class="fnode accent" style="text-align:center;"><div class="ftitle" style="font-size:0.82rem;">EXECUTION</div></div><div class="farrow">→</div>
+      <div class="fnode" style="text-align:center;"><div class="ftitle" style="font-size:0.82rem;">AUDIT LOG</div></div>
+    </div>
+
+    <div class="pillrow reveal">
+      <span class="pill">Permission System</span><span class="pill">Sandboxing</span><span class="pill">Plugin Permissions</span>
+      <span class="pill">Hardware Permissions</span><span class="pill">Authentication</span><span class="pill">Encryption</span>
+      <span class="pill">Audit Logs</span><span class="pill">Execution Policies</span><span class="pill">Safe Mode</span>
+      <span class="pill">Offline Mode</span><span class="pill">User Approval Gates</span>
+    </div>
+    <p class="body-text reveal">Nothing sensitive executes on inference alone — every high-stakes action is expected to pass a policy check, and many require an explicit nod from the user.</p>
+  </div>
+</section>
+
+<!-- 10 — OFFLINE / ONLINE -->
+<section class="page" id="page-10" data-title="Offline / Online Intelligence">
+  <div class="page-inner">
+    <div class="eyebrow reveal">09 · CONNECTIVITY</div>
+    <h1 class="pagetitle reveal">Offline / Online Intelligence</h1>
+    <p class="lede reveal">VEYA is meant to flex with how much network it has — and how much the user wants to expose.</p>
+
+    <div class="tri reveal">
+      <div class="tricard"><h4>Online</h4><ul><li>Cloud AI</li><li>Web access</li><li>Remote services</li><li>Updates</li></ul></div>
+      <div class="tricard"><h4>Offline</h4><ul><li>Local models</li><li>Local memory</li><li>Local tools</li><li>Local hardware control</li></ul></div>
+      <div class="tricard"><h4>Hybrid</h4><ul><li>Sensitive tasks stay local</li><li>Heavy tasks go to the cloud</li><li>User controls the data flow</li></ul></div>
+    </div>
+    <span class="tag tag--proposed reveal">PROPOSED ARCHITECTURE</span> <span class="tag tag--future reveal">FUTURE POSSIBILITY</span>
+  </div>
+</section>
+
+<!-- 11 — DEVELOPER ECOSYSTEM -->
+<section class="page" id="page-11" data-title="Developer Ecosystem">
+  <div class="page-inner">
+    <div class="eyebrow reveal">10 · ECOSYSTEM</div>
+    <h1 class="pagetitle reveal">Developer Ecosystem</h1>
+    <p class="lede reveal">A platform is only as alive as what people build on it.</p>
+
+    <div class="flow-v reveal" style="max-width:460px; margin:0 auto 26px;">
+      <div class="fnode accent" style="text-align:center;"><div class="ftitle">VEYA SDK</div></div>
+      <div class="farrow">↓</div>
+      <div class="fnode" style="text-align:center;"><div class="ftitle">Plugins / Mods / Agents / Hardware Modules</div></div>
+      <div class="farrow">↓</div>
+      <div class="fnode" style="text-align:center;"><div class="ftitle">VEYA Runtime</div></div>
+    </div>
+
+    <div class="pillrow reveal">
+      <span class="pill">Plugin API</span><span class="pill">Agent API</span><span class="pill">Event API</span>
+      <span class="pill">Hardware API</span><span class="pill">UI API</span><span class="pill">Memory API</span><span class="pill">Permission API</span>
+    </div>
+
+    <div class="codeblock reveal"><span class="c">// example plugin manifest — conceptual / example syntax only</span>
+{
+  <span class="k">"name"</span>: <span class="s">"weather-plugin"</span>,
+  <span class="k">"capability"</span>: <span class="s">"fetch_weather"</span>,
+  <span class="k">"permissions"</span>: [<span class="s">"network.read"</span>],
+  <span class="k">"sandbox"</span>: <span class="k">true</span>,
+  <span class="k">"entry"</span>: <span class="s">"main.js"</span>
+}</div>
+  </div>
+</section>
+
+<!-- 12 — WHY VEYA -->
+<section class="page" id="page-12" data-title="Why VEYA">
+  <div class="page-inner">
+    <div class="eyebrow reveal">11 · CLOSE</div>
+    <h1 class="pagetitle reveal">Why VEYA?</h1>
+
+    <table class="comp reveal">
+      <tr><th>Traditional AI Assistant</th><th>VEYA</th></tr>
+      <tr><td>Fixed capability set</td><td>Extensible via plugins &amp; mods</td></tr>
+      <tr><td>Single-model reasoning</td><td>Orchestrated agent architecture</td></tr>
+      <tr><td>Software-only</td><td>Software + hardware integration</td></tr>
+      <tr><td>Cloud-dependent</td><td>Offline / hybrid capable</td></tr>
+      <tr><td>Closed platform</td><td>Open developer ecosystem</td></tr>
+      <tr><td>Implicit trust</td><td>Explicit user control at every gate</td></tr>
+    </table>
+
+    <div class="quote reveal"><b style="color:var(--text); font-style:normal;">VEYA is not designed to be the smartest chatbot.</b><br>It is designed to become a platform where intelligence can live, operate and evolve.</div>
+
+    <div class="reveal" style="margin-top:20px; font-family:var(--mono);">
+      <div class="statusline">&gt; SYSTEM STATUS: INITIALIZING<span class="blink">_</span></div>
+      <div class="statusline"><span class="ok">&gt; CORE ....... ONLINE</span></div>
+      <div class="statusline"><span class="ok">&gt; AGENTS ..... READY</span></div>
+      <div class="statusline"><span class="ok">&gt; SECURITY ... ARMED</span></div>
+    </div>
+    <div class="final-tagline">VEYA — BUILD THE INTELLIGENCE.</div>
+    <footer class="pagefoot">END OF BRIEFING · REV 0.3 · CONCEPT STAGE</footer>
+  </div>
+</section>
+
+</main>
+
+<script>
+(function(){
+  "use strict";
+
+  var pages = Array.prototype.slice.call(document.querySelectorAll('.page'));
+  var total = pages.length;
+  var current = 0;
+
+  var sidenav = document.getElementById('sidenav');
+  var hudPage = document.getElementById('hudPage');
+  var progressFill = document.getElementById('progressFill');
+  var prevBtn = document.getElementById('prevBtn');
+  var nextBtn = document.getElementById('nextBtn');
+
+  // build sidenav
+  pages.forEach(function(p, i){
+    var btn = document.createElement('button');
+    btn.setAttribute('aria-label', 'Go to page ' + (i+1) + ': ' + p.dataset.title);
+    var num = document.createElement('span'); num.className = 'num'; num.textContent = String(i+1).padStart(2,'0');
+    var bar = document.createElement('span'); bar.className = 'bar';
+    var name = document.createElement('span'); name.className = 'name'; name.textContent = p.dataset.title;
+    btn.appendChild(num); btn.appendChild(bar); btn.appendChild(name);
+    btn.addEventListener('click', function(){ goTo(i); });
+    sidenav.appendChild(btn);
+  });
+
+  function pad(n){ return String(n).padStart(2,'0'); }
+
+  function update(){
+    pages.forEach(function(p, i){
+      p.classList.toggle('active', i === current);
+      p.setAttribute('aria-hidden', i === current ? 'false' : 'true');
+    });
+    var navBtns = sidenav.querySelectorAll('button');
+    navBtns.forEach(function(b, i){ b.classList.toggle('active', i === current); });
+    hudPage.textContent = 'PAGE ' + pad(current+1) + ' / ' + pad(total) + ' — ' + pages[current].dataset.title.toUpperCase();
+    progressFill.style.width = (((current+1)/total)*100).toFixed(1) + '%';
+    prevBtn.disabled = current === 0;
+    nextBtn.disabled = current === total - 1;
+  }
+
+  function goTo(i){
+    current = Math.max(0, Math.min(total-1, i));
+    update();
+  }
+  function next(){ goTo(current+1); }
+  function prev(){ goTo(current-1); }
+
+  prevBtn.addEventListener('click', prev);
+  nextBtn.addEventListener('click', next);
+  document.getElementById('exploreBtn').addEventListener('click', next);
+
+  document.addEventListener('keydown', function(e){
+    if(e.key === 'ArrowRight'){ next(); }
+    else if(e.key === 'ArrowLeft'){ prev(); }
+    else if(e.key === 'Home'){ goTo(0); }
+    else if(e.key === 'End'){ goTo(total-1); }
+  });
+
+  // touch swipe
+  var touchStartX = null;
+  document.addEventListener('touchstart', function(e){ touchStartX = e.changedTouches[0].clientX; }, {passive:true});
+  document.addEventListener('touchend', function(e){
+    if(touchStartX === null) return;
+    var dx = e.changedTouches[0].clientX - touchStartX;
+    if(Math.abs(dx) > 60){ dx < 0 ? next() : prev(); }
+    touchStartX = null;
+  }, {passive:true});
+
+  update();
+
+  // ---- background canvas: restrained schematic grid ----
+  var canvas = document.getElementById('bgCanvas');
+  var ctx = canvas.getContext('2d');
+  var reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  var w, h, dots = [];
+  var spacing = 46;
+
+  function resize(){
+    w = canvas.width = window.innerWidth;
+    h = canvas.height = window.innerHeight;
+    dots = [];
+    for(var x = spacing/2; x < w; x += spacing){
+      for(var y = spacing/2; y < h; y += spacing){
+        dots.push({x:x, y:y, base:y, phase: Math.random()*Math.PI*2});
+      }
+    }
+  }
+  window.addEventListener('resize', resize);
+  resize();
+
+  var t = 0;
+  function draw(){
+    ctx.clearRect(0,0,w,h);
+    ctx.fillStyle = 'rgba(150,160,170,0.14)';
+    for(var i=0;i<dots.length;i++){
+      var d = dots[i];
+      var yy = reduceMotion ? d.base : d.base + Math.sin(t*0.0006 + d.phase)*3;
+      ctx.fillRect(d.x, yy, 1, 1);
+    }
+    t += 16;
+    if(!reduceMotion){ requestAnimationFrame(draw); }
+  }
+  draw();
+})();
+</script>
+</body>
+</html>

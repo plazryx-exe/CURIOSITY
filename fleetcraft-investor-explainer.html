@@ -1,0 +1,997 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>FleetCraft — Technical Product Dossier</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500;600;700&family=Spectral:ital,wght@0,400;0,500;0,600;1,400&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --navy-deep:#081420;
+  --navy-panel:#0F2136;
+  --navy-panel-2:#16304A;
+  --navy-panel-3:#1C3A57;
+  --brass:#C9A227;
+  --brass-bright:#E4C55E;
+  --brass-dim:#7A6620;
+  --oxblood:#7A2E2E;
+  --oxblood-bright:#B84A4A;
+  --teal:#4E8A8C;
+  --teal-bright:#7FC2C4;
+  --parchment:#E8DCC4;
+  --parchment-dim:#9FAABB;
+  --rule:#23405C;
+}
+*{box-sizing:border-box;}
+html{scroll-behavior:smooth;}
+@media (prefers-reduced-motion: reduce){ html{scroll-behavior:auto;} *{animation-duration:0.001ms !important; transition-duration:0.001ms !important;} }
+body{
+  margin:0; background:
+    radial-gradient(ellipse at top, #10233a 0%, var(--navy-deep) 60%),
+    var(--navy-deep);
+  color:var(--parchment); font-family:'Spectral',serif; line-height:1.6;
+}
+.grid-overlay{position:fixed; inset:0; pointer-events:none; z-index:0;
+  background-image:linear-gradient(var(--rule) 1px, transparent 1px), linear-gradient(90deg, var(--rule) 1px, transparent 1px);
+  background-size:52px 52px; opacity:0.06;}
+h1,h2,h3,h4{font-family:'Cinzel',serif; margin:0; color:var(--parchment); font-weight:600;}
+.mono{font-family:'IBM Plex Mono',monospace;}
+::-webkit-scrollbar{width:10px;} ::-webkit-scrollbar-track{background:var(--navy-deep);} ::-webkit-scrollbar-thumb{background:var(--rule); border-radius:5px;}
+button{font-family:'IBM Plex Mono',monospace; cursor:pointer;}
+:focus-visible{outline:2px solid var(--brass); outline-offset:2px;}
+
+/* ---------- Top bar / progress ---------- */
+.progress-track{position:fixed; top:0; left:0; height:3px; background:linear-gradient(90deg,var(--brass),var(--teal)); z-index:100; width:0%; transition:width .1s linear;}
+
+.topbar{
+  position:fixed; top:0; left:0; right:0; z-index:90;
+  display:flex; align-items:center; justify-content:space-between;
+  padding:14px 28px; background:rgba(8,20,32,0.88); backdrop-filter:blur(8px);
+  border-bottom:1px solid var(--rule);
+}
+.tb-brand{display:flex; align-items:center; gap:10px;}
+.tb-brand .mark{width:26px;height:26px;border:1.5px solid var(--brass); border-radius:50%; position:relative; flex-shrink:0;}
+.tb-brand .mark::before{content:"";position:absolute; left:50%; top:50%; width:1.5px; height:14px; background:var(--brass); transform:translate(-50%,-50%);}
+.tb-brand .mark::after{content:"";position:absolute; left:50%; top:50%; width:14px; height:1.5px; background:var(--brass); transform:translate(-50%,-50%);}
+.tb-brand span{font-family:'Cinzel',serif; letter-spacing:2px; font-size:15px;}
+.tb-nav{display:flex; gap:2px; flex-wrap:wrap;}
+.tb-nav a{
+  font-family:'IBM Plex Mono',monospace; font-size:10.5px; letter-spacing:1px; text-transform:uppercase;
+  color:var(--parchment-dim); text-decoration:none; padding:8px 10px; border-bottom:2px solid transparent;
+  transition:color .15s, border-color .15s;
+}
+.tb-nav a:hover{color:var(--parchment);}
+.tb-nav a.active{color:var(--brass-bright); border-color:var(--brass);}
+.mode-toggle{
+  display:flex; align-items:center; gap:8px; font-family:'IBM Plex Mono',monospace; font-size:10.5px;
+  letter-spacing:1px; text-transform:uppercase; color:var(--parchment-dim); flex-shrink:0;
+}
+.mode-switch{
+  width:52px; height:24px; border-radius:14px; background:var(--navy-panel-2); border:1px solid var(--rule);
+  position:relative; cursor:pointer;
+}
+.mode-switch .knob{
+  position:absolute; top:2px; left:2px; width:18px; height:18px; border-radius:50%; background:var(--brass);
+  transition:left .2s ease;
+}
+body.technical .mode-switch .knob{left:32px; background:var(--teal-bright);}
+
+@media (max-width:1000px){ .tb-nav{display:none;} }
+
+/* ---------- Layout ---------- */
+.wrap{position:relative; z-index:1; padding-top:64px;}
+section{padding:90px 8vw 70px; max-width:1180px; margin:0 auto; border-bottom:1px solid var(--rule); scroll-margin-top:70px;}
+section:last-of-type{border-bottom:none;}
+.eyebrow{font-family:'IBM Plex Mono',monospace; font-size:11px; letter-spacing:3px; text-transform:uppercase; color:var(--brass); margin-bottom:14px;}
+h2.h{font-size:clamp(28px,3.4vw,42px); margin-bottom:16px; letter-spacing:0.3px;}
+.lede{color:var(--parchment-dim); font-size:17px; max-width:680px; margin-bottom:40px; font-style:italic;}
+
+/* ---------- Term tooltip ---------- */
+.term{border-bottom:1.5px dotted var(--brass); cursor:help; position:relative; color:var(--brass-bright);}
+.term .tip{
+  visibility:hidden; opacity:0; position:absolute; bottom:135%; left:50%; transform:translateX(-50%);
+  background:var(--navy-panel-3); border:1px solid var(--brass); color:var(--parchment); font-family:'Spectral',serif;
+  font-style:normal; font-size:13.5px; padding:10px 14px; border-radius:6px; width:240px; z-index:20;
+  transition:opacity .15s; box-shadow:0 8px 24px rgba(0,0,0,0.4);
+}
+.term:hover .tip, .term:focus .tip{visibility:visible; opacity:1;}
+
+/* ---------- Hero ---------- */
+.hero{padding-top:130px; text-align:center; border-bottom:1px solid var(--rule);}
+.hero .kicker{font-family:'IBM Plex Mono',monospace; letter-spacing:4px; color:var(--brass); font-size:12px; margin-bottom:18px;}
+.hero h1{font-size:clamp(38px,7vw,68px); letter-spacing:1px;}
+.hero .sub{font-size:20px; color:var(--parchment-dim); max-width:620px; margin:22px auto 40px; font-style:italic;}
+.pipeline-hero{display:flex; justify-content:center; align-items:center; gap:6px; flex-wrap:wrap; font-family:'IBM Plex Mono',monospace; font-size:14px; letter-spacing:1px; margin-bottom:16px;}
+.pipeline-hero .node{padding:9px 16px; border:1px solid var(--rule); border-radius:5px; background:var(--navy-panel); color:var(--parchment-dim);}
+.pipeline-hero .arrow{color:var(--brass-dim);}
+.hero-note{font-size:13px; color:var(--parchment-dim); max-width:520px; margin:0 auto 50px;}
+
+/* ---------- Generic cards/panels ---------- */
+.panel{background:var(--navy-panel); border:1px solid var(--rule); border-radius:8px; padding:26px 30px;}
+.grid-2{display:grid; grid-template-columns:1fr 1fr; gap:24px;}
+.grid-3{display:grid; grid-template-columns:repeat(3,1fr); gap:20px;}
+.grid-4{display:grid; grid-template-columns:repeat(4,1fr); gap:16px;}
+@media (max-width:900px){ .grid-2,.grid-3,.grid-4{grid-template-columns:1fr;} }
+
+/* ---------- Problem / solution ---------- */
+.compare{display:grid; grid-template-columns:1fr 1fr; gap:24px; margin-top:10px;}
+.compare .col{padding:24px 26px; border-radius:8px; border:1px solid var(--rule);}
+.compare .col.old{background:rgba(122,46,46,0.08); border-color:var(--oxblood);}
+.compare .col.new{background:rgba(201,162,39,0.07); border-color:var(--brass);}
+.compare .tag{font-family:'IBM Plex Mono',monospace; font-size:10.5px; letter-spacing:2px; text-transform:uppercase; margin-bottom:10px; display:block;}
+.compare .old .tag{color:var(--oxblood-bright);}
+.compare .new .tag{color:var(--brass-bright);}
+.compare p{margin:0; color:var(--parchment-dim); font-size:15px;}
+@media (max-width:900px){.compare{grid-template-columns:1fr;}}
+
+.formula{display:flex; align-items:center; justify-content:center; flex-wrap:wrap; gap:14px; margin:36px 0; font-family:'Cinzel',serif;}
+.formula .f-item{padding:14px 22px; border:1px solid var(--rule); border-radius:6px; background:var(--navy-panel); font-size:15px;}
+.formula .f-plus{color:var(--brass); font-size:20px;}
+.formula .f-result{padding:16px 30px; border:1.5px solid var(--brass); border-radius:6px; background:rgba(201,162,39,0.1); font-size:19px; color:var(--brass-bright); font-weight:700;}
+.formula .f-eq{color:var(--brass); font-size:22px;}
+
+.class-example{display:grid; grid-template-columns:repeat(3,1fr); gap:16px; margin-top:22px;}
+.class-example .ce{padding:18px 20px; border:1px solid var(--rule); border-radius:8px; background:var(--navy-panel); text-align:center;}
+.class-example .ce .n{font-family:'IBM Plex Mono',monospace; color:var(--brass); font-size:13px;}
+.class-example .ce h4{margin:8px 0 6px; font-size:17px;}
+.class-example .ce p{margin:0; color:var(--parchment-dim); font-size:13.5px;}
+@media (max-width:900px){.class-example{grid-template-columns:1fr;}}
+
+/* ---------- Build -> Ship pipeline ---------- */
+.stage-rail{display:flex; gap:0; overflow-x:auto; padding-bottom:6px; margin-bottom:22px;}
+.stage-btn{
+  flex:1; min-width:140px; text-align:center; padding:16px 10px; background:var(--navy-panel);
+  border:1px solid var(--rule); border-right:none; color:var(--parchment-dim); font-family:'IBM Plex Mono',monospace;
+  font-size:12px; letter-spacing:0.5px; transition:all .15s;
+}
+.stage-btn:last-child{border-right:1px solid var(--rule);}
+.stage-btn .sn{display:block; color:var(--brass-dim); font-size:10px; margin-bottom:6px;}
+.stage-btn:hover{background:var(--navy-panel-2); color:var(--parchment);}
+.stage-btn.active{background:rgba(201,162,39,0.14); color:var(--brass-bright); border-color:var(--brass);}
+.stage-btn.active .sn{color:var(--brass);}
+.stage-detail{min-height:150px;}
+.stage-detail h3{font-size:22px; margin-bottom:12px; color:var(--brass-bright);}
+.stage-detail p{color:var(--parchment); font-size:16px; max-width:640px;}
+.stage-detail .tech-only{margin-top:16px; padding-top:14px; border-top:1px dashed var(--rule); font-family:'IBM Plex Mono',monospace; font-size:13px; color:var(--teal-bright);}
+
+/* ---------- Validation console ---------- */
+.console-shell{border:1px solid var(--brass-dim); border-radius:8px; background:linear-gradient(180deg,#0D1F33,#0A1826); overflow:hidden;}
+.console-head{display:flex; justify-content:space-between; align-items:center; padding:14px 22px; background:var(--navy-panel-2); border-bottom:1px solid var(--rule);}
+.console-head span{font-family:'IBM Plex Mono',monospace; font-size:11px; letter-spacing:2px; color:var(--parchment-dim); text-transform:uppercase;}
+.req-grid{display:grid; grid-template-columns:repeat(2,1fr); gap:2px; background:var(--rule);}
+@media (max-width:800px){.req-grid{grid-template-columns:1fr;}}
+.req-row{display:flex; justify-content:space-between; align-items:center; padding:14px 22px; background:var(--navy-panel); font-size:14.5px;}
+.req-row .rname{display:flex; align-items:center; gap:10px;}
+.req-switch{width:42px; height:22px; border-radius:12px; background:#2c4a68; border:1px solid var(--rule); position:relative; flex-shrink:0;}
+.req-switch .k{position:absolute; top:2px; left:2px; width:16px; height:16px; border-radius:50%; background:var(--parchment-dim); transition:left .15s, background .15s;}
+.req-row.on .req-switch{background:rgba(201,162,39,0.22); border-color:var(--brass);}
+.req-row.on .req-switch .k{left:22px; background:var(--brass-bright);}
+.req-row.on .rname{color:var(--parchment);}
+.req-row:not(.on) .rname{color:var(--oxblood-bright);}
+.console-status{padding:22px; text-align:center; border-top:1px solid var(--rule);}
+.console-status .status-lbl{font-family:'IBM Plex Mono',monospace; font-size:12px; letter-spacing:2px; color:var(--parchment-dim); margin-bottom:6px;}
+.console-status .status-val{font-family:'Cinzel',serif; font-size:24px; font-weight:700;}
+.status-val.ready{color:var(--brass-bright);}
+.status-val.notready{color:var(--oxblood-bright);}
+.console-reason{font-size:13.5px; color:var(--parchment-dim); margin-top:8px; min-height:18px;}
+
+/* ---------- Hard categories ---------- */
+.cat-tabs{display:flex; flex-wrap:wrap; gap:8px; margin-bottom:22px;}
+.cat-tab{padding:10px 18px; border:1px solid var(--rule); border-radius:20px; background:var(--navy-panel); color:var(--parchment-dim); font-size:12.5px; letter-spacing:0.5px;}
+.cat-tab:hover{color:var(--parchment);}
+.cat-tab.active{background:rgba(78,138,140,0.15); border-color:var(--teal-bright); color:var(--teal-bright);}
+.cat-body .cb-row{margin-bottom:16px; padding-bottom:16px; border-bottom:1px dashed var(--rule);}
+.cat-body .cb-row:last-child{border-bottom:none; margin-bottom:0; padding-bottom:0;}
+.cat-body .cb-lbl{font-family:'IBM Plex Mono',monospace; font-size:10.5px; letter-spacing:2px; text-transform:uppercase; color:var(--brass); margin-bottom:6px;}
+.cat-body p{margin:0; color:var(--parchment); font-size:15px;}
+
+/* ---------- Ship diagram ---------- */
+.ship-diagram-wrap{position:relative; background:var(--navy-panel); border:1px solid var(--rule); border-radius:8px; padding:20px; overflow:hidden;}
+.hotspot{position:absolute; width:26px; height:26px; border-radius:50%; background:rgba(201,162,39,0.18); border:1.5px solid var(--brass); cursor:pointer; transform:translate(-50%,-50%);}
+.hotspot::after{content:""; position:absolute; inset:6px; border-radius:50%; background:var(--brass); animation:pulse 2.2s infinite;}
+@keyframes pulse{0%,100%{opacity:0.5;transform:scale(0.8);}50%{opacity:1;transform:scale(1.15);}}
+.hotspot:hover, .hotspot.active{background:rgba(201,162,39,0.4);}
+.ship-info{margin-top:18px; min-height:100px;}
+.ship-info h4{color:var(--brass-bright); font-size:18px; margin-bottom:8px;}
+.ship-info .sees{font-size:14px; color:var(--parchment); margin-bottom:8px;}
+.ship-info .does{font-size:13.5px; color:var(--teal-bright); font-family:'IBM Plex Mono',monospace;}
+
+/* ---------- Cannon sim ---------- */
+.cannon-sim{display:grid; grid-template-columns:1fr 1fr; gap:26px;}
+@media (max-width:900px){.cannon-sim{grid-template-columns:1fr;}}
+.sim-controls label{display:block; font-family:'IBM Plex Mono',monospace; font-size:11px; letter-spacing:1px; text-transform:uppercase; color:var(--parchment-dim); margin:14px 0 6px;}
+.sim-controls input[type=range]{width:100%; accent-color:var(--brass);}
+.fire-btn{margin-top:18px; padding:12px 26px; background:var(--oxblood); color:var(--parchment); border:1px solid var(--oxblood-bright); border-radius:6px; font-size:13px; letter-spacing:1.5px;}
+.fire-btn:disabled{opacity:0.4; cursor:not-allowed;}
+.sim-status{margin-top:14px; font-family:'IBM Plex Mono',monospace; font-size:12.5px; color:var(--teal-bright); min-height:18px;}
+.sim-view{position:relative; background:var(--navy-panel); border:1px solid var(--rule); border-radius:8px; height:220px; overflow:hidden;}
+.sim-chain{display:flex; flex-wrap:wrap; gap:6px; margin-top:16px; font-family:'IBM Plex Mono',monospace; font-size:11px;}
+.sim-chain span{padding:5px 10px; border:1px solid var(--rule); border-radius:4px; color:var(--parchment-dim);}
+.sim-chain span.hit{color:var(--brass-bright); border-color:var(--brass);}
+
+/* ---------- Damage control ---------- */
+.module-grid{display:grid; grid-template-columns:repeat(3,1fr); gap:16px;}
+@media (max-width:900px){.module-grid{grid-template-columns:1fr 1fr;}}
+@media (max-width:560px){.module-grid{grid-template-columns:1fr;}}
+.module-card{padding:18px; border:1px solid var(--rule); border-radius:8px; background:var(--navy-panel);}
+.module-card h4{font-size:15px; margin-bottom:10px;}
+.meter{height:8px; border-radius:4px; background:#20374f; overflow:hidden; margin-bottom:10px;}
+.meter .fill{height:100%; background:linear-gradient(90deg,var(--brass),var(--oxblood-bright)); width:0%; transition:width .3s;}
+.module-card button{width:100%; padding:8px; background:var(--navy-panel-2); border:1px solid var(--rule); color:var(--parchment-dim); border-radius:5px; font-size:11px;}
+.module-card button:hover{border-color:var(--brass); color:var(--parchment);}
+.consequence-log{margin-top:22px; padding:18px 22px; border-left:3px solid var(--oxblood); background:rgba(122,46,46,0.08); font-family:'IBM Plex Mono',monospace; font-size:13px; min-height:30px;}
+.consequence-log .step{color:var(--parchment-dim);}
+.consequence-log .step.current{color:var(--oxblood-bright); font-weight:600;}
+
+/* ---------- Multiplayer chain ---------- */
+.chain-flow{display:flex; flex-wrap:wrap; align-items:center; gap:4px; justify-content:center;}
+.chain-node{padding:12px 16px; border:1px solid var(--rule); border-radius:6px; background:var(--navy-panel); font-family:'IBM Plex Mono',monospace; font-size:12px; color:var(--parchment-dim); text-align:center;}
+.chain-node:hover, .chain-node.active{border-color:var(--teal-bright); color:var(--teal-bright); background:rgba(78,138,140,0.1);}
+.chain-arrow{color:var(--brass-dim);}
+.chain-detail{margin-top:24px; min-height:80px;}
+.chain-detail h4{color:var(--teal-bright); margin-bottom:8px;}
+.chain-detail p{color:var(--parchment); font-size:15px; margin:0;}
+
+/* ---------- Persistence ---------- */
+.identity-chain{display:flex; flex-direction:column; gap:0; max-width:340px; margin:0 auto;}
+.identity-chain .id-node{padding:11px 18px; border:1px solid var(--rule); background:var(--navy-panel); text-align:center; font-family:'IBM Plex Mono',monospace; font-size:12.5px; color:var(--parchment-dim);}
+.identity-chain .id-node:not(:last-child){border-bottom:none;}
+.sim-lifecycle{margin-top:34px; text-align:center;}
+.lifecycle-btn{padding:12px 26px; background:var(--brass-dim); color:var(--navy-deep); border:none; border-radius:6px; font-size:12.5px; letter-spacing:1.5px; font-weight:600;}
+.lifecycle-steps{display:flex; justify-content:center; gap:10px; flex-wrap:wrap; margin-top:24px;}
+.lc-step{padding:10px 16px; border:1px solid var(--rule); border-radius:6px; font-family:'IBM Plex Mono',monospace; font-size:11.5px; color:var(--rule); background:var(--navy-panel); transition:all .3s;}
+.lc-step.lit{color:var(--navy-deep); background:var(--brass-bright); border-color:var(--brass-bright);}
+
+/* ---------- Architecture ---------- */
+.arch-layers{display:grid; grid-template-columns:repeat(5,1fr); gap:14px;}
+@media (max-width:900px){.arch-layers{grid-template-columns:1fr 1fr;}}
+@media (max-width:560px){.arch-layers{grid-template-columns:1fr;}}
+.arch-card{padding:20px 16px; border:1px solid var(--rule); border-radius:8px; background:var(--navy-panel); text-align:center;}
+.arch-card:hover{border-color:var(--brass);}
+.arch-card h4{font-size:14px; letter-spacing:1.5px; margin-bottom:8px; color:var(--brass-bright);}
+.arch-card p{font-size:12.5px; color:var(--parchment-dim); margin:0;}
+.arch-detail{margin-top:24px; min-height:60px;}
+.tech-toggle-row{display:flex; align-items:center; gap:10px; margin-top:30px;}
+.tech-pkg-panel{display:none; margin-top:20px; padding:22px; border:1px dashed var(--teal); border-radius:8px; background:rgba(78,138,140,0.06);}
+.tech-pkg-panel.show{display:block;}
+.tech-pkg-panel .pkg-group{margin-bottom:14px;}
+.tech-pkg-panel .pkg-group .glbl{font-family:'IBM Plex Mono',monospace; font-size:10px; letter-spacing:2px; color:var(--teal-bright); text-transform:uppercase; margin-bottom:6px;}
+.tech-pkg-panel .pkg-items{display:flex; flex-wrap:wrap; gap:6px;}
+.tech-pkg-panel .pkg-items span{font-family:'IBM Plex Mono',monospace; font-size:11.5px; padding:4px 9px; border:1px solid var(--rule); border-radius:4px; color:var(--parchment-dim);}
+
+/* ---------- Roadmap ---------- */
+.road-track{position:relative; padding-left:30px; margin-top:20px;}
+.road-track::before{content:""; position:absolute; left:8px; top:6px; bottom:6px; width:2px; background:linear-gradient(var(--brass),var(--teal));}
+.road-item{position:relative; padding-bottom:4px; margin-bottom:6px; cursor:pointer;}
+.road-item::before{content:""; position:absolute; left:-30px; top:4px; width:14px; height:14px; border-radius:50%; background:var(--navy-deep); border:2.5px solid var(--brass);}
+.road-head{display:flex; align-items:baseline; gap:12px; padding:10px 14px; border-radius:6px; transition:background .15s;}
+.road-head:hover{background:rgba(201,162,39,0.06);}
+.road-head .rv{font-family:'IBM Plex Mono',monospace; color:var(--brass); font-size:13px; min-width:46px;}
+.road-head h4{font-size:16px;}
+.road-panel{display:none; padding:6px 14px 18px 14px; color:var(--parchment-dim); font-size:14px;}
+.road-panel.show{display:block;}
+.road-panel .rp-row{margin-bottom:8px;}
+.road-panel .rp-lbl{font-family:'IBM Plex Mono',monospace; font-size:10px; letter-spacing:1.5px; color:var(--teal-bright); text-transform:uppercase; margin-right:6px;}
+.road-item.milestone::before{background:var(--brass-bright); border-color:var(--parchment);}
+.post-release .road-item::before{border-color:var(--teal-bright);}
+
+/* ---------- Risk table ---------- */
+table.risk{width:100%; border-collapse:collapse; margin-top:10px;}
+table.risk th{font-family:'IBM Plex Mono',monospace; font-size:10.5px; letter-spacing:1.5px; text-transform:uppercase; color:var(--brass); text-align:left; padding:10px 14px; border-bottom:1.5px solid var(--brass-dim);}
+table.risk td{padding:14px; border-bottom:1px solid var(--rule); font-size:14px; color:var(--parchment-dim); vertical-align:top;}
+table.risk td.chal{color:var(--parchment); font-weight:600;}
+table.risk tr:last-child td{border-bottom:none;}
+
+/* ---------- Investor summary blocks ---------- */
+.thesis-box{padding:36px 40px; border:1px solid var(--brass-dim); border-radius:8px; background:linear-gradient(180deg,rgba(201,162,39,0.06),transparent);}
+.thesis-box p{font-size:17px; color:var(--parchment); margin:0;}
+.thesis-flow{display:flex; flex-wrap:wrap; justify-content:center; gap:8px; margin:32px 0; font-family:'IBM Plex Mono',monospace; font-size:13px;}
+.thesis-flow span.node{padding:10px 16px; border:1px solid var(--brass); border-radius:20px; color:var(--brass-bright);}
+.thesis-flow span.arr{color:var(--brass-dim); align-self:center;}
+.closing-line{text-align:center; font-family:'Cinzel',serif; font-size:24px; color:var(--brass-bright); margin-top:30px;}
+
+/* ---------- Player journey ---------- */
+.journey{display:grid; grid-template-columns:repeat(3,1fr); gap:16px;}
+@media (max-width:900px){.journey{grid-template-columns:1fr 1fr;}}
+@media (max-width:560px){.journey{grid-template-columns:1fr;}}
+.j-step{padding:18px; border:1px solid var(--rule); border-radius:8px; background:var(--navy-panel); text-align:center;}
+.j-step .jn{font-family:'IBM Plex Mono',monospace; font-size:10.5px; color:var(--brass-dim); letter-spacing:2px;}
+.j-step h4{margin:8px 0; font-size:16px;}
+
+footer{padding:40px 8vw 60px; text-align:center; color:var(--parchment-dim); font-size:12.5px; font-family:'IBM Plex Mono',monospace;}
+</style>
+</head>
+<body>
+
+<div class="grid-overlay"></div>
+<div class="progress-track" id="progressTrack"></div>
+
+<div class="topbar">
+  <div class="tb-brand"><div class="mark"></div><span>FLEETCRAFT</span></div>
+  <nav class="tb-nav" id="tbNav">
+    <a href="#overview">Overview</a>
+    <a href="#problem">Problem</a>
+    <a href="#solution">Solution</a>
+    <a href="#how-it-works">How It Works</a>
+    <a href="#technology">Technology</a>
+    <a href="#combat">Combat</a>
+    <a href="#multiplayer">Multiplayer</a>
+    <a href="#persistence">Persistence</a>
+    <a href="#roadmap">Roadmap</a>
+    <a href="#technical-depth">Technical Depth</a>
+    <a href="#investor-summary">Summary</a>
+  </nav>
+  <div class="mode-toggle">
+    <span id="modeLbl">Investor Mode</span>
+    <div class="mode-switch" id="modeSwitch" role="switch" aria-checked="false" tabindex="0"><div class="knob"></div></div>
+  </div>
+</div>
+
+<div class="wrap">
+
+  <!-- OVERVIEW / HERO -->
+  <section class="hero" id="overview">
+    <div class="kicker">FLEETCRAFT · TECHNICAL PRODUCT DOSSIER</div>
+    <h1>What if the ship you build<br>could actually become a ship?</h1>
+    <p class="sub">A Minecraft Fabric mod that turns player-built medieval warships into living, sailable, multiplayer vessels.</p>
+    <div class="pipeline-hero">
+      <div class="node">BLOCKS</div><div class="arrow">→</div>
+      <div class="node">SYSTEM</div><div class="arrow">→</div>
+      <div class="node">SHIP</div>
+    </div>
+    <p class="hero-note">The player builds the structure. FleetCraft gives it rules, physics, identity, and behavior. Scroll to see how — from the first block to a persistent, controllable, multiplayer-capable vessel.</p>
+  </section>
+
+  <!-- PROBLEM -->
+  <section id="problem">
+    <div class="eyebrow">The Problem</div>
+    <h2 class="h">Minecraft ships are usually a costume, not a system</h2>
+    <p class="lede">Most "ship" mods either hand the player a finished boat to place, or let them build something that looks like a ship but behaves like a pile of blocks with no rules underneath.</p>
+    <div class="compare">
+      <div class="col old">
+        <span class="tag">The Common Approach</span>
+        <p>Players pick a ship from a menu, or decorative builds that don't actually sail, take damage, or survive a server restart as one coherent object. Creativity is either boxed in, or purely visual with no gameplay underneath.</p>
+      </div>
+      <div class="col new">
+        <span class="tag">What Players Actually Want</span>
+        <p>To build <em>their own</em> warship out of ordinary blocks — and have the game treat it as a real vessel: something that moves, fights, takes damage in the right places, and is still there when they log back in.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- SOLUTION -->
+  <section id="solution">
+    <div class="eyebrow">The Solution</div>
+    <h2 class="h">The player creates the vessel. The system interprets it.</h2>
+    <p class="lede">FleetCraft never asks the player to select "Create Frigate" from a menu. It reads what they actually built, checks whether it qualifies as a working ship, and classifies it automatically.</p>
+    <div class="class-example">
+      <div class="ce"><div class="n">≤ 40 HULL BLOCKS</div><h4>Small Sloop</h4><p>Fast, lightly armed, easy to build.</p></div>
+      <div class="ce"><div class="n">41–150 HULL BLOCKS</div><h4>Medium Frigate</h4><p>Balanced speed, firepower, and crew capacity.</p></div>
+      <div class="ce"><div class="n">151+ HULL BLOCKS</div><h4>Large Galleon</h4><p>Slow, heavily armed, built for real campaigns.</p></div>
+    </div>
+    <p class="lede" style="margin-top:26px;">What we're actually building isn't a boat model. It's a gameplay framework — <span class="term" tabindex="0">construction<span class="tip">The player-built structure, made of ordinary Minecraft blocks, before it becomes a ship.</span></span> interpreted into <span class="term" tabindex="0">simulation<span class="tip">Physics, wind, and movement that make the ship behave like a real vessel.</span></span>, exposed through <span class="term" tabindex="0">combat<span class="tip">Cannons, projectiles, and module-based damage.</span></span>, protected by <span class="term" tabindex="0">persistence<span class="tip">Save data that lets the ship survive server restarts and player logouts.</span></span>, and shared through <span class="term" tabindex="0">multiplayer<span class="tip">Server-authoritative synchronization so every player sees the same ship state.</span></span>.</p>
+    <div class="formula">
+      <div class="f-item">Construction</div><div class="f-plus">+</div>
+      <div class="f-item">Simulation</div><div class="f-plus">+</div>
+      <div class="f-item">Combat</div><div class="f-plus">+</div>
+      <div class="f-item">Persistence</div><div class="f-plus">+</div>
+      <div class="f-item">Multiplayer</div>
+      <div class="f-eq">=</div>
+      <div class="f-result">FleetCraft</div>
+    </div>
+  </section>
+
+  <!-- HOW IT WORKS -->
+  <section id="how-it-works">
+    <div class="eyebrow">How It Works</div>
+    <h2 class="h">From block placement to a launch-ready vessel</h2>
+    <p class="lede">Click through each stage of the pipeline to see what actually happens — in plain language first.</p>
+
+    <div class="panel">
+      <div class="stage-rail" id="stageRail"></div>
+      <div class="stage-detail" id="stageDetail"></div>
+    </div>
+
+    <h3 style="margin-top:56px; font-size:24px;">The Ship Inspection Console</h3>
+    <p class="lede" style="margin-top:10px;">Before any construction can launch, it has to pass a rules-based inspection — not a cosmetic check. Try switching requirements off below.</p>
+    <div class="console-shell">
+      <div class="console-head"><span>Ship Inspection Console</span><span class="mono" id="reqCount">11 / 11 satisfied</span></div>
+      <div class="req-grid" id="reqGrid"></div>
+      <div class="console-status">
+        <div class="status-lbl">Ship Status</div>
+        <div class="status-val ready" id="statusVal">LAUNCH READY</div>
+        <div class="console-reason" id="statusReason"></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- TECHNOLOGY / ARCHITECTURE -->
+  <section id="technology">
+    <div class="eyebrow">Technology</div>
+    <h2 class="h">Five layers, working together</h2>
+    <p class="lede">At a high level, the engineering breaks into five understandable responsibilities. Click a layer to see what it's for.</p>
+    <div class="arch-layers" id="archLayers"></div>
+    <div class="arch-detail panel" id="archDetail"></div>
+
+    <div class="tech-toggle-row">
+      <button id="archTechBtn" class="fire-btn" style="background:var(--navy-panel-2); border-color:var(--teal);">Show Technical Architecture</button>
+    </div>
+    <div class="tech-pkg-panel" id="archTechPanel"></div>
+
+    <h3 style="margin-top:56px; font-size:24px;">What's actually hard about this?</h3>
+    <p class="lede" style="margin-top:10px;">Building a boat model is easy. These six problems are why FleetCraft is real engineering.</p>
+    <div class="cat-tabs" id="catTabs"></div>
+    <div class="panel cat-body" id="catBody"></div>
+  </section>
+
+  <!-- COMBAT -->
+  <section id="combat">
+    <div class="eyebrow">Combat &amp; Ship Systems</div>
+    <h2 class="h">Every visible part of the ship is a working system underneath</h2>
+    <p class="lede">Click a component on the ship to see what the player experiences — and the chain of logic running behind it.</p>
+
+    <div class="ship-diagram-wrap">
+      <svg viewBox="0 0 800 260" width="100%" style="display:block; max-height:280px;">
+        <defs>
+          <linearGradient id="hullGrad" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stop-color="#2A4A68"/><stop offset="100%" stop-color="#132A42"/>
+          </linearGradient>
+        </defs>
+        <!-- waterline -->
+        <line x1="0" y1="200" x2="800" y2="200" stroke="#23405C" stroke-dasharray="6 6"/>
+        <!-- hull -->
+        <path d="M 90 150 Q 400 240 710 150 L 690 195 Q 400 220 110 195 Z" fill="url(#hullGrad)" stroke="#C9A227" stroke-width="1.5"/>
+        <!-- masts -->
+        <line x1="260" y1="150" x2="260" y2="40" stroke="#C9A227" stroke-width="4"/>
+        <line x1="450" y1="150" x2="450" y2="30" stroke="#C9A227" stroke-width="4"/>
+        <!-- sails -->
+        <path d="M 262 55 Q 320 70 262 110 Z" fill="#E8DCC4" opacity="0.85"/>
+        <path d="M 452 45 Q 520 62 452 105 Z" fill="#E8DCC4" opacity="0.85"/>
+        <!-- rudder -->
+        <path d="M 90 155 L 65 175 L 90 190 Z" fill="#7A2E2E" stroke="#B84A4A"/>
+        <!-- cannons -->
+        <rect x="150" y="152" width="26" height="8" fill="#4E8A8C"/>
+        <rect x="600" y="152" width="26" height="8" fill="#4E8A8C"/>
+      </svg>
+      <div class="hotspot" style="left:14%; top:64%;" data-part="hull"></div>
+      <div class="hotspot" style="left:32.5%; top:20%;" data-part="mast"></div>
+      <div class="hotspot" style="left:8%; top:68%;" data-part="rudder"></div>
+      <div class="hotspot" style="left:6%; top:58%;" data-part="anchor"></div>
+      <div class="hotspot" style="left:20%; top:60%;" data-part="cannon"></div>
+      <div class="hotspot" style="left:56.5%; top:22%;" data-part="sail"></div>
+      <div class="hotspot" style="left:47%; top:70%;" data-part="crew"></div>
+      <div class="hotspot" style="left:65%; top:74%;" data-part="cargo"></div>
+      <div class="ship-info" id="shipInfo"></div>
+    </div>
+
+    <h3 style="margin-top:56px; font-size:24px;">Cannon Simulator</h3>
+    <p class="lede" style="margin-top:10px;">A cannon looks like one button: fire. Underneath, it's several connected systems.</p>
+    <div class="panel cannon-sim">
+      <div class="sim-controls">
+        <label>Aim Angle <span id="aimVal">0°</span></label>
+        <input type="range" id="aimSlider" min="-45" max="45" value="0">
+        <label>Elevation <span id="elevVal">20°</span></label>
+        <input type="range" id="elevSlider" min="0" max="45" value="20">
+        <button class="fire-btn" id="fireBtn">FIRE</button>
+        <div class="sim-status" id="simStatus">Status: Loaded — ready to fire.</div>
+        <div class="sim-chain" id="simChain"></div>
+      </div>
+      <div class="sim-view">
+        <svg id="cannonSvg" viewBox="0 0 400 220" width="100%" height="100%">
+          <line x1="0" y1="200" x2="400" y2="200" stroke="#23405C" stroke-dasharray="6 6"/>
+          <rect x="20" y="185" width="30" height="12" fill="#4E8A8C" id="cannonBase"/>
+          <circle id="projectile" cx="35" cy="188" r="6" fill="#C9A227" opacity="0"/>
+          <rect x="340" y="120" width="30" height="80" fill="#16304A" stroke="#23405C" id="targetHull"/>
+          <text x="330" y="112" fill="#9FAABB" font-size="11" font-family="IBM Plex Mono, monospace" id="impactLbl"></text>
+        </svg>
+      </div>
+    </div>
+
+    <h3 style="margin-top:56px; font-size:24px;">Damage Control</h3>
+    <p class="lede" style="margin-top:10px;">FleetCraft does not treat the ship as one generic health bar. Damage targets specific modules and creates physical consequences.</p>
+    <div class="module-grid" id="moduleGrid"></div>
+    <div class="consequence-log" id="consequenceLog">Select a module and apply damage to see the consequence chain.</div>
+  </section>
+
+  <!-- MULTIPLAYER -->
+  <section id="multiplayer">
+    <div class="eyebrow">Multiplayer</div>
+    <h2 class="h">Why can't everything happen on the player's computer?</h2>
+    <p class="lede">Because multiplayer games need a trusted authority. The <span class="term" tabindex="0">server<span class="tip">The shared computer that runs the authoritative version of the world every player connects to.</span></span> validates important actions and determines the real ship state — every player then sees a synchronized result.</p>
+    <div class="panel">
+      <div class="chain-flow" id="mpChain"></div>
+      <div class="chain-detail" id="mpDetail"></div>
+    </div>
+  </section>
+
+  <!-- PERSISTENCE -->
+  <section id="persistence">
+    <div class="eyebrow">Persistence</div>
+    <h2 class="h">The ship isn't temporary</h2>
+    <p class="lede">Every launched ship carries a structured identity record — so it survives world saves, chunk unloading, and the player logging off entirely.</p>
+    <div class="grid-2">
+      <div class="panel">
+        <div class="identity-chain" id="idChain"></div>
+      </div>
+      <div class="panel" style="text-align:center;">
+        <p style="color:var(--parchment-dim); margin-top:0;">Simulate what happens when a player leaves and returns.</p>
+        <div class="sim-lifecycle">
+          <button class="lifecycle-btn" id="lifecycleBtn">SIMULATE LEAVE &amp; RETURN</button>
+          <div class="lifecycle-steps" id="lifecycleSteps"></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ROADMAP -->
+  <section id="roadmap">
+    <div class="eyebrow">Development Roadmap</div>
+    <h2 class="h">A staged, sequenced build — not a single leap</h2>
+    <p class="lede">Click any milestone. Development status shown is <strong style="color:var(--brass-bright);">planned / in development</strong>, sequenced from a bare Fabric scaffold to a stable release.</p>
+    <div class="road-track" id="roadTrackMain"></div>
+    <h3 style="margin-top:46px; font-size:22px;">Post-Release</h3>
+    <div class="road-track post-release" id="roadTrackPost"></div>
+  </section>
+
+  <!-- TECHNICAL DEPTH -->
+  <section id="technical-depth">
+    <div class="eyebrow">Technical Depth</div>
+    <h2 class="h">Risk → Approach → Result</h2>
+    <p class="lede">The core engineering challenges, and how the architecture is designed to address each one.</p>
+    <table class="risk">
+      <tr><th>Challenge</th><th>Why It's Difficult</th><th>Our Approach</th></tr>
+      <tr><td class="chal">Player-built ship movement</td><td>Minecraft normally handles blocks and entities completely differently — a build isn't a single movable object by default.</td><td>Validated construction is converted into a dedicated ship entity that the engine can move and control as one object.</td></tr>
+      <tr><td class="chal">Multiplayer synchronization</td><td>Different players must see a consistent ship state at the same time, over an unreliable network.</td><td>Server-authoritative simulation with client-side interpolation for smooth, consistent rendering.</td></tr>
+      <tr><td class="chal">Damage &amp; consequence</td><td>A ship has many meaningful components — a single health bar can't represent that.</td><td>Module-based damage resolution routes impact to the specific hull, mast, rudder, or other component involved.</td></tr>
+      <tr><td class="chal">Persistence</td><td>Ships must survive world saves, chunk unloading, and players rejoining later.</td><td>A structured save record — identity, blueprint, damage state, cargo, crew, and location — stored and reconstructed on load.</td></tr>
+      <tr><td class="chal">Performance</td><td>Large player-built ships can contain a great many blocks and interacting systems at once.</td><td>Performance optimization is explicitly scheduled as its own stage (v0.8) before polish and release — not an afterthought.</td></tr>
+    </table>
+
+    <h3 style="margin-top:50px; font-size:24px;">What Are We Actually Building?</h3>
+    <p class="lede" style="margin-top:10px;">FleetCraft is not simply a boat-building mod. It's a gameplay framework that turns player-constructed medieval vessels into persistent, controllable, multiplayer-capable ships.</p>
+  </section>
+
+  <!-- INVESTOR SUMMARY -->
+  <section id="investor-summary">
+    <div class="eyebrow">Investor Summary</div>
+    <h2 class="h">The Technical Thesis</h2>
+    <div class="thesis-box">
+      <p>FleetCraft's core technical challenge isn't creating a boat model. It's creating a system that can interpret player-created Minecraft structures, validate them, convert them into controllable entities, simulate their behavior, synchronize them in multiplayer, persist their state, and expose all of that through one coherent player experience.</p>
+    </div>
+    <div class="thesis-flow">
+      <span class="node">BUILD</span><span class="arr">→</span>
+      <span class="node">INTERPRET</span><span class="arr">→</span>
+      <span class="node">VALIDATE</span><span class="arr">→</span>
+      <span class="node">SIMULATE</span><span class="arr">→</span>
+      <span class="node">SYNCHRONIZE</span><span class="arr">→</span>
+      <span class="node">PERSIST</span><span class="arr">→</span>
+      <span class="node">PLAY</span>
+    </div>
+
+    <h3 style="margin-top:50px; font-size:22px;">What The Player Experiences</h3>
+    <div class="journey" id="journeyGrid"></div>
+
+    <p class="closing-line">The player builds the ship.<br>The technology makes it alive.</p>
+  </section>
+
+  <footer>FLEETCRAFT — TECHNICAL PRODUCT DOSSIER · Architecture reflects current development plan; features marked "planned" are not yet implemented.</footer>
+</div>
+
+<script>
+/* ====================== MODE TOGGLE ====================== */
+const modeSwitch = document.getElementById('modeSwitch');
+const modeLbl = document.getElementById('modeLbl');
+function setMode(tech){
+  document.body.classList.toggle('technical', tech);
+  modeLbl.textContent = tech ? 'Technical Mode' : 'Investor Mode';
+  modeSwitch.setAttribute('aria-checked', tech);
+}
+modeSwitch.addEventListener('click', ()=> setMode(!document.body.classList.contains('technical')));
+modeSwitch.addEventListener('keydown', e=>{ if(e.key==='Enter'||e.key===' '){ e.preventDefault(); modeSwitch.click(); }});
+
+/* ====================== PROGRESS + SCROLLSPY ====================== */
+const track = document.getElementById('progressTrack');
+window.addEventListener('scroll', ()=>{
+  const h = document.documentElement;
+  const pct = (h.scrollTop)/(h.scrollHeight - h.clientHeight) * 100;
+  track.style.width = pct + '%';
+});
+const navLinks = [...document.querySelectorAll('.tb-nav a')];
+const sections = navLinks.map(a=>document.querySelector(a.getAttribute('href')));
+const spy = new IntersectionObserver((entries)=>{
+  entries.forEach(en=>{
+    if(en.isIntersecting){
+      const id = '#'+en.target.id;
+      navLinks.forEach(a=>a.classList.toggle('active', a.getAttribute('href')===id));
+    }
+  });
+},{rootMargin:'-45% 0px -50% 0px'});
+sections.forEach(s=> s && spy.observe(s));
+
+/* ====================== STAGE PIPELINE ====================== */
+const stages = [
+  {n:'01', title:'Player Construction', plain:'At this stage, the player is simply building normally in Minecraft — placing blocks in the shape of a hull, deck, masts, and everything else a ship needs.', tech:'Technical: no engine involvement yet — this is standard block placement.'},
+  {n:'02', title:'Scanner', plain:'The mod examines the structure and identifies which connected blocks belong to the vessel, tracing outward from a helm block the player interacts with.', tech:'Technical: ShipScanner performs a connectivity scan from the helm block.'},
+  {n:'03', title:'Validation', plain:'The system checks whether the construction actually satisfies the requirements for a functioning ship — hull, rudder, masts, weight balance, and more.', tech:'Technical: ShipValidator runs the full requirement checklist shown in the Inspection Console below.'},
+  {n:'04', title:'Classification', plain:'Based on what was actually built — hull size, mast count, armament — the system determines what class of ship it qualifies as.', tech:'Technical: ShipClassifier maps scanned dimensions to Small / Medium / Large.'},
+  {n:'05', title:'Ship Entity', plain:'Once approved, the structure becomes a controllable game object — not a static build, but something the engine can move, damage, and simulate as one thing.', tech:'Technical: ShipEntity is instantiated, wrapping the scanned blueprint.'},
+  {n:'06', title:'Living Ship', plain:'From here, the vessel sails, fights, takes damage, carries crew and cargo, and persists across sessions — the full gameplay loop.', tech:'Technical: Physics, DamageSystem, CannonSystem, SailSystem, NetworkSync, and Save Data all attach to the entity.'},
+];
+const stageRail = document.getElementById('stageRail');
+const stageDetail = document.getElementById('stageDetail');
+function renderStage(i){
+  [...stageRail.children].forEach((el,idx)=>el.classList.toggle('active', idx===i));
+  const s = stages[i];
+  stageDetail.innerHTML = `<h3>${s.title}</h3><p>${s.plain}</p><div class="tech-only" style="display:${document.body.classList.contains('technical')?'block':'none'}">${s.tech}</div>`;
+}
+stages.forEach((s,i)=>{
+  const b = document.createElement('div');
+  b.className = 'stage-btn' + (i===0?' active':'');
+  b.innerHTML = `<span class="sn">STAGE ${s.n}</span>${s.title}`;
+  b.addEventListener('click', ()=>renderStage(i));
+  stageRail.appendChild(b);
+});
+renderStage(0);
+// re-render tech line visibility on mode change
+const origSetMode = setMode;
+setMode = function(tech){ origSetMode(tech); renderStage([...stageRail.children].findIndex(c=>c.classList.contains('active'))); renderArchDetail(currentArch); };
+
+/* ====================== VALIDATION CONSOLE ====================== */
+const requirements = [
+  {key:'hull', label:'Connected Hull', reason:'Without a connected hull, there is no single structure for the scanner to treat as a ship.'},
+  {key:'helm', label:'Helm', reason:'Without a helm, there is no control point for the player to command the vessel from.'},
+  {key:'anchor', label:'Anchor', reason:'Without an anchor, the vessel cannot be held in place, which the launch requirements depend on.'},
+  {key:'rudder', label:'Rudder', reason:'Without a rudder, the vessel cannot satisfy the current launch requirements — there is no way to steer it.'},
+  {key:'masts', label:'Masts', reason:'Without masts, there is nowhere to mount sails, so the ship has no means of propulsion.'},
+  {key:'sails', label:'Sails', reason:'Without sails, wind cannot be converted into movement.'},
+  {key:'cannons', label:'Cannons', reason:'Without cannons in place, the armament class cannot be determined.'},
+  {key:'crew', label:'Crew Seats', reason:'Without crew seats, there is nowhere for a crew to be assigned aboard the vessel.'},
+  {key:'weight', label:'Weight Distribution', reason:'Uneven weight distribution means the hull would behave unpredictably in water.'},
+  {key:'com', label:'Center of Mass', reason:'An unresolved center of mass means stability during movement cannot be guaranteed.'},
+  {key:'buoyancy', label:'Buoyancy', reason:'Without a valid buoyancy calculation, the system cannot determine how the ship sits in water.'},
+];
+const reqState = {};
+requirements.forEach(r=> reqState[r.key]=true);
+const reqGrid = document.getElementById('reqGrid');
+const reqCount = document.getElementById('reqCount');
+const statusVal = document.getElementById('statusVal');
+const statusReason = document.getElementById('statusReason');
+function renderReq(){
+  reqGrid.innerHTML='';
+  requirements.forEach(r=>{
+    const row = document.createElement('div');
+    row.className = 'req-row' + (reqState[r.key] ? ' on':'');
+    row.innerHTML = `<div class="rname">${reqState[r.key]?'✓':'✕'} ${r.label}</div><div class="req-switch"><div class="k"></div></div>`;
+    row.addEventListener('click', ()=>{ reqState[r.key] = !reqState[r.key]; renderReq(); });
+    reqGrid.appendChild(row);
+  });
+  const total = requirements.length;
+  const on = requirements.filter(r=>reqState[r.key]).length;
+  reqCount.textContent = `${on} / ${total} satisfied`;
+  if(on===total){
+    statusVal.textContent = 'LAUNCH READY';
+    statusVal.className = 'status-val ready';
+    statusReason.textContent = 'All requirements satisfied. The construction qualifies as a functioning ship.';
+  } else {
+    statusVal.textContent = 'NOT READY';
+    statusVal.className = 'status-val notready';
+    const failed = requirements.filter(r=>!reqState[r.key]);
+    statusReason.textContent = 'VALIDATION FAILED — ' + failed.map(f=>f.reason).join(' ');
+  }
+}
+renderReq();
+
+/* ====================== HARD CATEGORIES ====================== */
+const hardCats = {
+  Movement:{
+    biz:'Turning a large, irregular player build into something that moves smoothly is not a small feature — it\'s the foundation everything else depends on.',
+    tech:'The validated block structure is wrapped in a dedicated ship entity so the engine can translate and rotate it as a single unit.',
+    matters:'Without this, "sailing" would just mean the blocks stay frozen in place — there\'s no game without it.',
+    hard:'Minecraft entities and static blocks normally behave very differently; bridging the two reliably, at any build size, is the core technical bet of the project.'
+  },
+  Physics:{
+    biz:'A ship that ignores its own weight or the wind wouldn\'t feel like a ship — it would feel like a floating screenshot.',
+    tech:'Weight distribution, center of mass, and buoyancy feed into acceleration, turning, and how the hull sits in water; wind modifies sail-driven speed.',
+    matters:'This is what makes a Small Sloop feel fast and nimble while a Large Galleon feels slow and powerful — automatically, from what was built.',
+    hard:'These values all have to be derived from whatever the player actually built, not from a fixed template, and stay stable in real time.'
+  },
+  Collision:{
+    biz:'A ship that can pass through terrain, other ships, or players isn\'t believable, and breaks combat entirely.',
+    tech:'The ship needs meaningful collision against the world and other objects, not just a visual bounding box.',
+    matters:'Collision is what makes cannon impacts, ship-to-ship contact, and running aground actually mean something.',
+    hard:'Large, irregular player-built shapes make accurate, performant collision detection significantly harder than for a fixed-size vanilla entity.'
+  },
+  Combat:{
+    biz:'The cannon the player clicks is simple. What happens after they click it isn\'t.',
+    tech:'A projectile impact is converted into damage against the specific ship module it hit, not a flat "ship health" value.',
+    matters:'This is what lets damage feel physical and specific — a mast hit behaves differently from a hull breach.',
+    hard:'Resolving "which module got hit" and routing consequences correctly, in real time, across a build that can vary enormously in shape.'
+  },
+  Networking:{
+    biz:'In multiplayer, every player has to see the same ship doing the same thing at the same time.',
+    tech:'The server runs the authoritative simulation; clients send input and receive validated state back, smoothed with interpolation.',
+    matters:'Without this, players could see conflicting ship positions, desynced damage, or exploit client-side control.',
+    hard:'Keeping a large, physics-driven object synchronized over an unreliable network, without visible stutter, is one of the harder problems in game networking.'
+  },
+  Persistence:{
+    biz:'A ship a player spent hours building has to still be there — intact — after the server restarts or they log back in.',
+    tech:'A structured save record captures identity, blueprint, damage state, cargo, crew, and location.',
+    matters:'This is what turns FleetCraft from a session toy into something players actually invest in.',
+    hard:'Reconstructing a live, simulated entity from stored data — correctly, every time, including mid-damage states — takes careful engineering.'
+  },
+};
+const catTabs = document.getElementById('catTabs');
+const catBody = document.getElementById('catBody');
+function renderCat(name){
+  [...catTabs.children].forEach(c=>c.classList.toggle('active', c.textContent===name));
+  const c = hardCats[name];
+  catBody.innerHTML = `
+    <div class="cb-row"><div class="cb-lbl">Business-Level</div><p>${c.biz}</p></div>
+    <div class="cb-row"><div class="cb-lbl">Technical Mechanism</div><p>${c.tech}</p></div>
+    <div class="cb-row"><div class="cb-lbl">Why It Matters</div><p>${c.matters}</p></div>
+    <div class="cb-row"><div class="cb-lbl">What Makes It Hard</div><p>${c.hard}</p></div>
+  `;
+}
+Object.keys(hardCats).forEach(name=>{
+  const b = document.createElement('div');
+  b.className = 'cat-tab';
+  b.textContent = name;
+  b.addEventListener('click', ()=>renderCat(name));
+  catTabs.appendChild(b);
+});
+renderCat('Movement');
+
+/* ====================== ARCHITECTURE ====================== */
+const archLayerData = [
+  {key:'CORE', desc:'The actual ship and game logic — scanning, validation, physics, damage, combat.', pkgs:['ShipEntity','ShipScanner','ShipValidator','ShipClassifier','ShipPhysics','WindSystem','DamageSystem','CannonSystem','SailSystem','CrewSystem']},
+  {key:'CLIENT', desc:'What the player sees and controls — rendering and the ship dashboard.', pkgs:['ShipRenderer']},
+  {key:'SERVER', desc:'The authoritative simulation every player\'s state is validated against.', pkgs:['ShipTicker','ShipChunkAnchor']},
+  {key:'NETWORK', desc:'Communication between players and the server.', pkgs:['Packet','ShipSyncManager']},
+  {key:'DATA', desc:'Saving and loading — the persistent identity of every ship.', pkgs:['ShipNbtIO','BlueprintSerializer']},
+];
+const archLayers = document.getElementById('archLayers');
+const archDetail = document.getElementById('archDetail');
+let currentArch = 0;
+function renderArchDetail(i){
+  currentArch = i;
+  [...archLayers.children].forEach((c,idx)=>c.style.borderColor = idx===i ? 'var(--brass)' : 'var(--rule)');
+  const a = archLayerData[i];
+  archDetail.innerHTML = `<h4 style="color:var(--brass-bright); margin-bottom:8px;">${a.key}</h4><p style="margin:0; color:var(--parchment);">${a.desc}</p>`;
+}
+archLayerData.forEach((a,i)=>{
+  const c = document.createElement('div');
+  c.className='arch-card';
+  c.innerHTML = `<h4>${a.key}</h4><p>${a.desc.split('—')[0]}</p>`;
+  c.addEventListener('click', ()=>renderArchDetail(i));
+  archLayers.appendChild(c);
+});
+renderArchDetail(0);
+
+const archTechBtn = document.getElementById('archTechBtn');
+const archTechPanel = document.getElementById('archTechPanel');
+archTechPanel.innerHTML = archLayerData.map(a=>`
+  <div class="pkg-group">
+    <div class="glbl">${a.key}</div>
+    <div class="pkg-items">${a.pkgs.map(p=>`<span>${p}</span>`).join('')}</div>
+  </div>
+`).join('');
+archTechBtn.addEventListener('click', ()=>{
+  const show = archTechPanel.classList.toggle('show');
+  archTechBtn.textContent = show ? 'Hide Technical Architecture' : 'Show Technical Architecture';
+});
+
+/* ====================== SHIP HOTSPOTS ====================== */
+const shipParts = {
+  hull:{title:'Hull', sees:'The visible body of the ship, built entirely from the player\'s chosen blocks.', does:'Connectivity scan → weight & buoyancy source → primary damage target for flooding.'},
+  mast:{title:'Mast', sees:'A vertical structure that holds the sails aloft.', does:'Scanner requirement → sail attachment point → damage target that disables attached sails.'},
+  rudder:{title:'Rudder', sees:'A component at the stern used to steer.', does:'Scanner requirement → steering input source → damage target that reduces turning ability.'},
+  anchor:{title:'Anchor', sees:'A component used to hold the ship in place.', does:'Scanner requirement → validated at launch → damage target affecting anchor reliability.'},
+  cannon:{title:'Cannon', sees:'A functional cannon the player can aim and fire.', does:'Aim → check firing constraints → fire → spawn projectile → detect collision → calculate damage → reload.'},
+  sail:{title:'Sail', sees:'Cloth mounted to a mast that catches the wind.', does:'State machine: Furled → Half Sail → Full Sail → wind modifier → acceleration → speed.'},
+  crew:{title:'Crew', sees:'Seats where players or crew occupy roles aboard the ship.', does:'Scanner requirement → occupancy tracking → part of persisted save data.'},
+  cargo:{title:'Cargo', sees:'Storage space aboard the vessel.', does:'Inventory system → persisted in save data → accessible through the ship dashboard.'},
+};
+const hotspots = document.querySelectorAll('.hotspot');
+const shipInfo = document.getElementById('shipInfo');
+function renderShipInfo(part){
+  hotspots.forEach(h=>h.classList.toggle('active', h.dataset.part===part));
+  const p = shipParts[part];
+  shipInfo.innerHTML = `<h4>${p.title}</h4><div class="sees"><strong>What the player sees:</strong> ${p.sees}</div><div class="does"><strong>What the system does:</strong> ${p.does}</div>`;
+}
+hotspots.forEach(h=> h.addEventListener('click', ()=>renderShipInfo(h.dataset.part)));
+renderShipInfo('cannon');
+
+/* ====================== CANNON SIMULATOR ====================== */
+const aimSlider = document.getElementById('aimSlider');
+const elevSlider = document.getElementById('elevSlider');
+const aimVal = document.getElementById('aimVal');
+const elevVal = document.getElementById('elevVal');
+const fireBtn = document.getElementById('fireBtn');
+const simStatus = document.getElementById('simStatus');
+const simChain = document.getElementById('simChain');
+const projectile = document.getElementById('projectile');
+const impactLbl = document.getElementById('impactLbl');
+const cannonBase = document.getElementById('cannonBase');
+let loaded = true;
+aimSlider.addEventListener('input', ()=>{ aimVal.textContent = aimSlider.value+'°'; cannonBase.setAttribute('transform', `rotate(${aimSlider.value*0.4} 35 191)`); });
+elevSlider.addEventListener('input', ()=> elevVal.textContent = elevSlider.value+'°');
+const chainSteps = ['Player Input','Validation','Projectile','Collision','Damage','Reload'];
+function paintChain(activeIdx){
+  simChain.innerHTML = chainSteps.map((s,i)=>`<span class="${i<=activeIdx?'hit':''}">${s}</span>`).join('');
+}
+paintChain(-1);
+fireBtn.addEventListener('click', ()=>{
+  if(!loaded) return;
+  loaded = false;
+  fireBtn.disabled = true;
+  let step = 0;
+  paintChain(0);
+  simStatus.textContent = 'Validating firing constraints (elevation & traverse)...';
+  setTimeout(()=>{
+    paintChain(1);
+    simStatus.textContent = 'Constraints satisfied — projectile spawned.';
+    projectile.setAttribute('opacity','1');
+    projectile.setAttribute('cx',35); projectile.setAttribute('cy',188 - elevSlider.value*1.4);
+    let t=0;
+    const anim = setInterval(()=>{
+      t+=0.05;
+      const x = 35 + t*310;
+      const y = 188 - elevSlider.value*1.4 - Math.sin(t*3.14159)*70;
+      projectile.setAttribute('cx',x); projectile.setAttribute('cy',y);
+      if(t>=1){
+        clearInterval(anim);
+        paintChain(3);
+        simStatus.textContent = 'Collision detected on target hull.';
+        setTimeout(()=>{
+          paintChain(4);
+          impactLbl.textContent = 'Hull module damaged';
+          simStatus.textContent = 'Damage applied to hull module.';
+          projectile.setAttribute('opacity','0');
+          setTimeout(()=>{
+            paintChain(5);
+            simStatus.textContent = 'Reloading...';
+            setTimeout(()=>{
+              loaded = true;
+              fireBtn.disabled = false;
+              simStatus.textContent = 'Status: Loaded — ready to fire.';
+              impactLbl.textContent='';
+              paintChain(-1);
+            },1400);
+          },600);
+        },500);
+      }
+    },16);
+  },500);
+});
+
+/* ====================== DAMAGE CONTROL ====================== */
+const modules = ['Hull','Mast','Rudder','Anchor','Cannons','Sails'];
+const moduleGrid = document.getElementById('moduleGrid');
+const consequenceLog = document.getElementById('consequenceLog');
+const moduleDamage = {};
+modules.forEach(m=>moduleDamage[m]=0);
+const hullChain = ['Hull Integrity ↓','Hull Breach','Flooding','Listing','Critical Flooding','Sinking'];
+const genericChain = ['Integrity ↓','Module Impaired','Module Disabled'];
+function renderModules(){
+  moduleGrid.innerHTML='';
+  modules.forEach(m=>{
+    const card = document.createElement('div');
+    card.className='module-card';
+    card.innerHTML = `<h4>${m}</h4><div class="meter"><div class="fill" style="width:${moduleDamage[m]}%"></div></div><button data-m="${m}">Apply Damage</button>`;
+    card.querySelector('button').addEventListener('click', ()=>{
+      moduleDamage[m] = Math.min(100, moduleDamage[m]+20);
+      renderModules();
+      logConsequence(m);
+    });
+    moduleGrid.appendChild(card);
+  });
+}
+function logConsequence(m){
+  const dmg = moduleDamage[m];
+  const chain = m==='Hull' ? hullChain : genericChain;
+  const stepIdx = Math.min(chain.length-1, Math.floor(dmg/20)-1);
+  if(stepIdx<0) return;
+  consequenceLog.innerHTML = `<strong style="color:var(--parchment);">${m}:</strong> ` + chain.map((c,i)=>`<span class="step ${i===stepIdx?'current':''}">${c}</span>`).join(' → ');
+}
+renderModules();
+
+/* ====================== MULTIPLAYER CHAIN ====================== */
+const mpNodes = [
+  {n:'Player Input', d:'The player presses a key or clicks — steering the helm, raising sails, firing a cannon.'},
+  {n:'Client', d:'The player\'s own game captures the input and shows an immediate local response for responsiveness.'},
+  {n:'Network Packet', d:'That input is packaged into a small message and sent to the server.'},
+  {n:'Server', d:'The shared authority every connected player trusts — it decides what actually happened.'},
+  {n:'Validation', d:'The server checks the action is legal — the requested move, the ship state, the physics.'},
+  {n:'Physics', d:'The server runs the actual physics step for the ship — position, rotation, speed.'},
+  {n:'Updated Ship State', d:'The resulting, authoritative state of the ship after that step.'},
+  {n:'Client', d:'That state is sent back down to every connected player, including the one who acted.'},
+  {n:'Interpolated Render', d:'The client smooths between received states so movement looks fluid, not stuttery, even over a real network.'},
+];
+const mpChain = document.getElementById('mpChain');
+const mpDetail = document.getElementById('mpDetail');
+mpNodes.forEach((node,i)=>{
+  const el = document.createElement('div');
+  el.className = 'chain-node';
+  el.textContent = node.n;
+  el.addEventListener('click', ()=>renderMp(i));
+  mpChain.appendChild(el);
+  if(i<mpNodes.length-1){
+    const arr = document.createElement('span');
+    arr.className='chain-arrow'; arr.textContent='→';
+    mpChain.appendChild(arr);
+  }
+});
+function renderMp(i){
+  [...mpChain.querySelectorAll('.chain-node')].forEach((c,idx)=>c.classList.toggle('active', idx===i));
+  mpDetail.innerHTML = `<h4>${mpNodes[i].n}</h4><p>${mpNodes[i].d}</p>`;
+}
+renderMp(3);
+
+/* ====================== PERSISTENCE ====================== */
+const idFields = ['SHIP UUID','SHIP NAME','SHIP CLASS','BLUEPRINT','DAMAGE STATE','CARGO','CREW','WORLD LOCATION','SAVE DATA'];
+document.getElementById('idChain').innerHTML = idFields.map(f=>`<div class="id-node">${f}</div>`).join('');
+
+const lifecycleStages = ['PLAYER LEAVES WORLD','SHIP DATA STORED','PLAYER RETURNS','SHIP RECONSTRUCTED'];
+const lifecycleSteps = document.getElementById('lifecycleSteps');
+lifecycleSteps.innerHTML = lifecycleStages.map(s=>`<div class="lc-step">${s}</div>`).join('');
+document.getElementById('lifecycleBtn').addEventListener('click', function(){
+  const steps = [...lifecycleSteps.children];
+  steps.forEach(s=>s.classList.remove('lit'));
+  let i=0;
+  this.disabled = true;
+  const iv = setInterval(()=>{
+    if(i<steps.length){ steps[i].classList.add('lit'); i++; }
+    else { clearInterval(iv); this.disabled=false; }
+  },650);
+});
+
+/* ====================== ROADMAP ====================== */
+const roadmapMain = [
+  {v:'v0.1', t:'Foundation', what:'Project setup, Fabric loom, base ship entity, basic movement.', why:'Every later system needs a moving ship entity to attach to.', unlocks:'The first controllable ship object.'},
+  {v:'v0.2', t:'Scanning &amp; Launch', what:'Scanner, launching, validation engine.', why:'Player-built structures need to be reliably converted into ships before anything else matters.', unlocks:'Players can build and launch a ship from ordinary blocks.'},
+  {v:'v0.3', t:'Interface', what:'GUI, ship dashboard, inventory.', why:'Once ships exist, players need a way to see and control their status.', unlocks:'A usable command interface for the captain.'},
+  {v:'v0.4', t:'Armament', what:'Cannons, cannonballs, smoke, reload logic.', why:'Combat is a core part of the warship fantasy, and depends on a stable moving ship.', unlocks:'Ship-to-ship combat.'},
+  {v:'v0.5', t:'Combat Consequence', what:'Damage system, flooding, repairs.', why:'Combat needs stakes — cannons firing into nothing isn\'t compelling.', unlocks:'Meaningful damage, flooding, and recovery.'},
+  {v:'v0.6', t:'Multiplayer', what:'Networking, state synchronization.', why:'A ship that only one player can see isn\'t a multiplayer feature yet.', unlocks:'Shared, synchronized ships across a server.'},
+  {v:'v0.7', t:'Sailing Feel', what:'Wind, sailing improvements, collision refinement.', why:'With core systems stable, movement can be refined toward how sailing should actually feel.', unlocks:'Wind-driven sailing and better collision behavior.'},
+  {v:'v0.8', t:'Performance', what:'Optimization, mesh cache, collision optimization.', why:'Large ships and full multiplayer sessions need to run smoothly before release.', unlocks:'Stable performance at scale.'},
+  {v:'v0.9', t:'Polish', what:'Sounds, particles, animations.', why:'Final sensory polish, once mechanics are locked.', unlocks:'A finished, atmospheric experience.'},
+  {v:'v1.0', t:'Stable Release', what:'Published to CurseForge &amp; Modrinth.', why:'All core systems complete and stabilized.', unlocks:'Public availability.', milestone:true},
+];
+const roadmapPost = [
+  {v:'v1.1', t:'Merchant Ships', what:'Non-combat trade vessels and routes.', why:'Extends the ship system beyond combat.', unlocks:'Economic gameplay foundations.'},
+  {v:'v1.2', t:'Pirates', what:'Hostile ship encounters on the open sea.', why:'Adds emergent conflict once trade routes exist.', unlocks:'Risk for merchant activity.'},
+  {v:'v1.3', t:'Crew AI', what:'Autonomous crew behavior and roles.', why:'Ships feel alive with a crew, not just a solo pilot.', unlocks:'NPC-crewed vessels.'},
+  {v:'v1.4', t:'Fleet Battles', what:'Coordinated multi-ship combat.', why:'Builds on stable single-ship combat and multiplayer sync.', unlocks:'Large-scale naval warfare.'},
+  {v:'v1.5', t:'Trading System', what:'Economy layer built on merchant routes.', why:'Turns merchant ships into a full economic loop.', unlocks:'Persistent in-game economy.'},
+  {v:'v2.0', t:'Ocean Expansion', what:'Weather, storms, whirlpools, sea monsters, dynamic oceans.', why:'The long-term vision once the ship framework is proven.', unlocks:'A living ocean to sail in.', milestone:true},
+];
+function renderRoad(container, data){
+  container.innerHTML = data.map((r,i)=>`
+    <div class="road-item ${r.milestone?'milestone':''}" data-i="${i}">
+      <div class="road-head"><span class="rv">${r.v}</span><h4>${r.t}</h4></div>
+      <div class="road-panel">
+        <div class="rp-row"><span class="rp-lbl">What</span>${r.what}</div>
+        <div class="rp-row"><span class="rp-lbl">Why Now</span>${r.why}</div>
+        <div class="rp-row"><span class="rp-lbl">Unlocks</span>${r.unlocks}</div>
+      </div>
+    </div>
+  `).join('');
+  [...container.querySelectorAll('.road-item')].forEach(item=>{
+    item.querySelector('.road-head').addEventListener('click', ()=>{
+      item.querySelector('.road-panel').classList.toggle('show');
+    });
+  });
+}
+renderRoad(document.getElementById('roadTrackMain'), roadmapMain);
+renderRoad(document.getElementById('roadTrackPost'), roadmapPost);
+
+/* ====================== PLAYER JOURNEY ====================== */
+const journey = ['Build','Inspect','Launch','Sail','Fight','Take Damage','Repair / Continue','Save','Return'];
+document.getElementById('journeyGrid').innerHTML = journey.map((j,i)=>`
+  <div class="j-step"><div class="jn">STEP ${String(i+1).padStart(2,'0')}</div><h4>${j}</h4></div>
+`).join('');
+</script>
+</body>
+</html>

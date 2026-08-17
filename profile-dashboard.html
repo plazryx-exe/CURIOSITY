@@ -1,0 +1,933 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Sharma // Builder Profile</title>
+<style>
+/* ============================================================
+   ROOT TOKENS
+   ============================================================ */
+:root{
+  --bg:#05070d;
+  --bg-2:#080c17;
+  --panel:rgba(18,24,42,0.55);
+  --panel-border:rgba(120,160,255,0.16);
+  --blue:#3ea6ff;
+  --cyan:#22e6d5;
+  --purple:#a78bfa;
+  --violet:#7c5cff;
+  --text:#e7ecff;
+  --muted:#8a93b8;
+  --muted-2:#5c6488;
+  --radius:18px;
+  --font-display:'Orbitron', 'Segoe UI', sans-serif;
+  --font-body:'Inter', 'Segoe UI', sans-serif;
+  --font-mono:'JetBrains Mono', monospace;
+}
+
+@import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@500;700;900&family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap');
+
+*{margin:0;padding:0;box-sizing:border-box;}
+html{scroll-behavior:smooth;}
+
+body{
+  background:var(--bg);
+  color:var(--text);
+  font-family:var(--font-body);
+  overflow-x:hidden;
+  min-height:100vh;
+  position:relative;
+}
+
+@media (prefers-reduced-motion: reduce){
+  *{animation-duration:0.01ms !important; animation-iteration-count:1 !important; transition-duration:0.01ms !important; scroll-behavior:auto !important;}
+}
+
+/* ============================================================
+   ANIMATED BACKGROUND (canvas particles + gradient mesh)
+   ============================================================ */
+#bg-canvas{
+  position:fixed; inset:0; z-index:0; opacity:0.55;
+}
+.bg-mesh{
+  position:fixed; inset:0; z-index:0; pointer-events:none;
+  background:
+    radial-gradient(circle at 15% 20%, rgba(62,166,255,0.16), transparent 40%),
+    radial-gradient(circle at 85% 15%, rgba(167,139,250,0.14), transparent 45%),
+    radial-gradient(circle at 50% 90%, rgba(34,230,213,0.10), transparent 50%),
+    var(--bg);
+}
+.bg-grid{
+  position:fixed; inset:0; z-index:0; pointer-events:none;
+  background-image:
+    linear-gradient(rgba(120,160,255,0.05) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(120,160,255,0.05) 1px, transparent 1px);
+  background-size:42px 42px;
+  mask-image:radial-gradient(circle at 50% 30%, black, transparent 75%);
+}
+
+/* ============================================================
+   LAYOUT SHELL
+   ============================================================ */
+.wrap{position:relative; z-index:1;}
+.section{
+  max-width:1180px;
+  margin:0 auto;
+  padding:110px 32px;
+}
+.section-tag{
+  font-family:var(--font-mono);
+  font-size:12px;
+  letter-spacing:3px;
+  text-transform:uppercase;
+  color:var(--cyan);
+  display:flex; align-items:center; gap:10px;
+  margin-bottom:14px;
+}
+.section-tag::before{
+  content:''; width:24px; height:1px;
+  background:linear-gradient(90deg,var(--cyan),transparent);
+}
+.section-title{
+  font-family:var(--font-display);
+  font-weight:700;
+  font-size:clamp(26px,4vw,42px);
+  letter-spacing:1px;
+  margin-bottom:44px;
+  background:linear-gradient(90deg,#fff, var(--blue) 70%);
+  -webkit-background-clip:text;
+  background-clip:text;
+  color:transparent;
+}
+
+/* reveal-on-scroll */
+.reveal{opacity:0; transform:translateY(28px); transition:opacity .8s cubic-bezier(.2,.7,.3,1), transform .8s cubic-bezier(.2,.7,.3,1);}
+.reveal.in-view{opacity:1; transform:translateY(0);}
+
+/* ============================================================
+   GLASS PANEL / CARD
+   ============================================================ */
+.glass{
+  background:var(--panel);
+  border:1px solid var(--panel-border);
+  border-radius:var(--radius);
+  backdrop-filter:blur(18px) saturate(140%);
+  -webkit-backdrop-filter:blur(18px) saturate(140%);
+  position:relative;
+  overflow:hidden;
+}
+.glass::before{
+  content:'';
+  position:absolute; inset:0;
+  background:linear-gradient(135deg, rgba(255,255,255,0.06), transparent 40%);
+  pointer-events:none;
+}
+.glow-border{
+  position:relative;
+}
+.glow-border::after{
+  content:'';
+  position:absolute; inset:-1px;
+  border-radius:inherit;
+  padding:1px;
+  background:linear-gradient(120deg, var(--blue), var(--purple), var(--cyan), var(--blue));
+  background-size:300% 300%;
+  -webkit-mask:linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  -webkit-mask-composite:xor;
+  mask-composite:exclude;
+  opacity:0;
+  transition:opacity .4s ease;
+  animation:borderFlow 6s linear infinite;
+  pointer-events:none;
+}
+.glow-border:hover::after{opacity:1;}
+@keyframes borderFlow{
+  0%{background-position:0% 50%;}
+  100%{background-position:300% 50%;}
+}
+
+/* ============================================================
+   NAV
+   ============================================================ */
+nav{
+  position:fixed; top:0; left:0; right:0; z-index:50;
+  display:flex; align-items:center; justify-content:space-between;
+  padding:18px 32px;
+  background:rgba(5,7,13,0.55);
+  backdrop-filter:blur(14px);
+  border-bottom:1px solid var(--panel-border);
+}
+.logo{
+  font-family:var(--font-display); font-weight:700; font-size:15px;
+  letter-spacing:2px; color:var(--text);
+}
+.logo span{color:var(--cyan);}
+.nav-links{display:flex; gap:26px; list-style:none;}
+.nav-links a{
+  color:var(--muted); text-decoration:none; font-size:13px;
+  letter-spacing:0.5px; transition:color .25s ease; position:relative;
+}
+.nav-links a:hover{color:var(--cyan);}
+.nav-links{display:none;}
+@media(min-width:900px){.nav-links{display:flex;}}
+
+/* ============================================================
+   1. HERO
+   ============================================================ */
+.hero{
+  min-height:100vh;
+  display:flex; flex-direction:column; align-items:center; justify-content:center;
+  text-align:center;
+  padding:140px 24px 60px;
+  position:relative;
+}
+.hero-orb{
+  width:150px; height:150px; border-radius:50%;
+  margin:0 auto 32px;
+  background:conic-gradient(from 0deg, var(--blue), var(--purple), var(--cyan), var(--blue));
+  animation:spin 8s linear infinite;
+  display:flex; align-items:center; justify-content:center;
+  box-shadow:0 0 60px rgba(62,166,255,0.35), 0 0 120px rgba(167,139,250,0.2);
+  position:relative;
+}
+.hero-orb::before{
+  content:''; position:absolute; inset:6px; border-radius:50%;
+  background:var(--bg); display:flex;
+}
+.hero-orb-core{
+  position:absolute; inset:6px; border-radius:50%;
+  background:radial-gradient(circle at 35% 30%, #0e1424, #05070d);
+  display:flex; align-items:center; justify-content:center;
+  font-family:var(--font-display); font-weight:900; font-size:34px;
+  color:var(--cyan); text-shadow:0 0 18px var(--cyan);
+}
+@keyframes spin{to{transform:rotate(360deg);}}
+
+.hero-eyebrow{
+  font-family:var(--font-mono); color:var(--cyan); letter-spacing:4px;
+  font-size:13px; margin-bottom:18px; text-transform:uppercase;
+  animation:fadeIn 1s ease .1s both;
+}
+.hero h1{
+  font-family:var(--font-display); font-weight:900;
+  font-size:clamp(38px,7vw,72px); line-height:1.05;
+  background:linear-gradient(120deg,#fff 20%, var(--blue) 55%, var(--purple) 80%);
+  -webkit-background-clip:text; background-clip:text; color:transparent;
+  animation:fadeIn 1s ease .25s both;
+  margin-bottom:20px;
+}
+.hero p.tagline{
+  max-width:620px; color:var(--muted); font-size:17px; line-height:1.7;
+  animation:fadeIn 1s ease .45s both;
+  margin-bottom:36px;
+}
+.hero-stats{
+  display:flex; gap:14px; flex-wrap:wrap; justify-content:center;
+  animation:fadeIn 1s ease .6s both;
+}
+.hero-stat{
+  padding:14px 22px; border-radius:14px;
+  min-width:120px;
+}
+.hero-stat b{
+  display:block; font-family:var(--font-display); font-size:22px;
+  color:var(--text);
+}
+.hero-stat span{font-size:11px; color:var(--muted); letter-spacing:1px; text-transform:uppercase;}
+
+@keyframes fadeIn{from{opacity:0; transform:translateY(16px);} to{opacity:1; transform:translateY(0);}}
+
+.scroll-cue{
+  position:absolute; bottom:36px; left:50%; transform:translateX(-50%);
+  display:flex; flex-direction:column; align-items:center; gap:8px;
+  color:var(--muted-2); font-size:11px; letter-spacing:2px;
+  animation:bob 2.4s ease-in-out infinite;
+}
+.scroll-cue .stick{width:1px; height:34px; background:linear-gradient(var(--cyan),transparent);}
+@keyframes bob{0%,100%{transform:translate(-50%,0);} 50%{transform:translate(-50%,8px);}}
+
+/* ============================================================
+   2. INTEREST RADAR
+   ============================================================ */
+.radar-layout{display:grid; grid-template-columns:1fr; gap:40px; align-items:center;}
+@media(min-width:860px){.radar-layout{grid-template-columns:1fr 1fr;}}
+.radar-wrap{display:flex; justify-content:center;}
+.radar-bars{display:flex; flex-direction:column; gap:22px;}
+.bar-row{}
+.bar-row .bar-label{
+  display:flex; justify-content:space-between; font-size:13px; margin-bottom:8px;
+  color:var(--text);
+}
+.bar-row .bar-label span:last-child{color:var(--cyan); font-family:var(--font-mono);}
+.bar-track{
+  height:9px; border-radius:6px; background:rgba(255,255,255,0.06);
+  overflow:hidden; position:relative;
+}
+.bar-fill{
+  height:100%; border-radius:6px; width:0;
+  background:linear-gradient(90deg, var(--blue), var(--cyan));
+  box-shadow:0 0 12px rgba(62,166,255,0.6);
+  transition:width 1.4s cubic-bezier(.2,.8,.3,1);
+}
+
+/* ============================================================
+   3. SKILLS
+   ============================================================ */
+.skills-grid{
+  display:grid; grid-template-columns:repeat(auto-fit,minmax(200px,1fr));
+  gap:18px;
+}
+.skill-card{
+  padding:22px; text-align:center;
+  transition:transform .35s ease, box-shadow .35s ease;
+}
+.skill-card:hover{transform:translateY(-6px); box-shadow:0 16px 40px rgba(62,166,255,0.15);}
+.skill-ring{
+  width:86px; height:86px; margin:0 auto 14px; position:relative;
+}
+.skill-ring svg{transform:rotate(-90deg);}
+.skill-ring circle{fill:none; stroke-width:6;}
+.skill-ring .bg-ring{stroke:rgba(255,255,255,0.07);}
+.skill-ring .fg-ring{
+  stroke:url(#ringGrad); stroke-linecap:round;
+  stroke-dasharray:245; stroke-dashoffset:245;
+  transition:stroke-dashoffset 1.6s cubic-bezier(.2,.8,.3,1);
+}
+.skill-ring .pct{
+  position:absolute; inset:0; display:flex; align-items:center; justify-content:center;
+  font-family:var(--font-mono); font-size:15px; color:var(--text);
+}
+.skill-card h4{font-size:14px; letter-spacing:0.5px; color:var(--text);}
+.skill-card p{font-size:11px; color:var(--muted-2); margin-top:4px;}
+
+/* ============================================================
+   4. PROJECTS
+   ============================================================ */
+.project-grid{
+  display:grid; grid-template-columns:repeat(auto-fit,minmax(260px,1fr));
+  gap:22px;
+}
+.project-card{
+  padding:28px; cursor:pointer; transition:transform .4s ease;
+  display:flex; flex-direction:column; gap:14px;
+}
+.project-card:hover{transform:translateY(-8px);}
+.project-head{display:flex; justify-content:space-between; align-items:flex-start;}
+.project-head h3{
+  font-family:var(--font-display); font-size:17px; letter-spacing:0.5px;
+}
+.project-status{
+  font-size:10px; letter-spacing:1px; text-transform:uppercase;
+  padding:4px 10px; border-radius:20px; font-family:var(--font-mono);
+  border:1px solid; white-space:nowrap;
+}
+.status-active{color:var(--cyan); border-color:var(--cyan); background:rgba(34,230,213,0.08);}
+.status-r&d{color:var(--purple); border-color:var(--purple); background:rgba(167,139,250,0.08);}
+.status-concept{color:var(--blue); border-color:var(--blue); background:rgba(62,166,255,0.08);}
+.project-card p{font-size:13px; color:var(--muted); line-height:1.65;}
+.project-tags{display:flex; flex-wrap:wrap; gap:6px;}
+.project-tags span{
+  font-size:10px; font-family:var(--font-mono); color:var(--muted);
+  border:1px solid var(--panel-border); border-radius:6px; padding:3px 8px;
+}
+.project-icon{
+  width:42px; height:42px; border-radius:12px;
+  display:flex; align-items:center; justify-content:center;
+  background:linear-gradient(135deg, rgba(62,166,255,0.18), rgba(167,139,250,0.18));
+  flex-shrink:0;
+}
+
+/* ============================================================
+   5/6. LEARNING JOURNEY + BUILDER FLOW
+   ============================================================ */
+.flow-row{
+  display:flex; flex-wrap:wrap; gap:0; align-items:stretch; justify-content:center;
+}
+.flow-step{
+  flex:1 1 150px; padding:22px 18px; text-align:center; position:relative;
+  min-width:150px;
+}
+.flow-step h4{font-family:var(--font-display); font-size:13px; margin-bottom:6px; color:var(--cyan);}
+.flow-step p{font-size:12px; color:var(--muted);}
+.flow-arrow{
+  display:flex; align-items:center; justify-content:center;
+  color:var(--muted-2); font-size:20px; padding:0 6px;
+}
+
+/* ============================================================
+   7/8. STRENGTHS & CHALLENGES
+   ============================================================ */
+.dual-grid{display:grid; grid-template-columns:1fr; gap:24px;}
+@media(min-width:860px){.dual-grid{grid-template-columns:1fr 1fr;}}
+.list-panel{padding:30px;}
+.list-panel h3{
+  font-family:var(--font-display); font-size:16px; margin-bottom:20px;
+  display:flex; align-items:center; gap:10px;
+}
+.list-panel ul{list-style:none; display:flex; flex-direction:column; gap:14px;}
+.list-panel li{
+  display:flex; gap:12px; font-size:13px; color:var(--muted); line-height:1.6;
+}
+.dot{
+  width:8px; height:8px; border-radius:50%; margin-top:5px; flex-shrink:0;
+  box-shadow:0 0 8px currentColor;
+}
+.dot-strength{background:var(--cyan); color:var(--cyan);}
+.dot-challenge{background:var(--purple); color:var(--purple);}
+
+/* ============================================================
+   9. VISION ROADMAP
+   ============================================================ */
+.roadmap{display:flex; flex-direction:column; gap:0;}
+.roadmap-item{
+  display:grid; grid-template-columns:70px 1fr; gap:20px; padding:22px 0;
+  border-bottom:1px solid var(--panel-border);
+}
+.roadmap-item:last-child{border-bottom:none;}
+.roadmap-phase{
+  font-family:var(--font-mono); color:var(--blue); font-size:12px; letter-spacing:1px;
+}
+.roadmap-item h4{font-size:15px; margin-bottom:6px;}
+.roadmap-item p{font-size:13px; color:var(--muted); line-height:1.6;}
+
+/* ============================================================
+   10. TIMELINE
+   ============================================================ */
+.timeline{position:relative; padding-left:34px;}
+.timeline::before{
+  content:''; position:absolute; left:6px; top:6px; bottom:6px; width:2px;
+  background:linear-gradient(var(--blue), var(--purple), var(--cyan));
+  opacity:0.4;
+}
+.tl-item{position:relative; padding-bottom:38px;}
+.tl-item:last-child{padding-bottom:0;}
+.tl-dot{
+  position:absolute; left:-34px; top:2px; width:14px; height:14px; border-radius:50%;
+  background:var(--bg); border:2px solid var(--cyan); box-shadow:0 0 12px var(--cyan);
+}
+.tl-item .tl-date{font-family:var(--font-mono); font-size:11px; color:var(--cyan); letter-spacing:1px;}
+.tl-item h4{font-size:15px; margin:4px 0 6px;}
+.tl-item p{font-size:13px; color:var(--muted); line-height:1.6;}
+
+/* ============================================================
+   FOOTER
+   ============================================================ */
+footer{
+  padding:60px 32px 40px; text-align:center; position:relative; z-index:1;
+  border-top:1px solid var(--panel-border);
+}
+footer .logo{margin-bottom:14px; justify-content:center; display:flex;}
+footer p{color:var(--muted-2); font-size:12px; letter-spacing:0.5px;}
+footer .footer-links{
+  display:flex; justify-content:center; gap:18px; margin-top:16px;
+}
+footer .footer-links span{
+  font-size:11px; color:var(--muted); font-family:var(--font-mono);
+  border:1px solid var(--panel-border); padding:6px 12px; border-radius:20px;
+}
+
+/* misc */
+::selection{background:rgba(62,166,255,0.35);}
+</style>
+</head>
+<body>
+
+<canvas id="bg-canvas"></canvas>
+<div class="bg-mesh"></div>
+<div class="bg-grid"></div>
+
+<!-- ============================================================
+     NAV
+     ============================================================ -->
+<nav>
+  <div class="logo">SHARMA<span>::</span>OS</div>
+  <ul class="nav-links">
+    <li><a href="#projects">Projects</a></li>
+    <li><a href="#skills">Skills</a></li>
+    <li><a href="#journey">Journey</a></li>
+    <li><a href="#vision">Vision</a></li>
+    <li><a href="#timeline">Timeline</a></li>
+  </ul>
+</nav>
+
+<div class="wrap">
+
+  <!-- ============================================================
+       1. HERO / PROFILE DASHBOARD
+       ============================================================ -->
+  <section class="hero">
+    <div class="hero-orb">
+      <div class="hero-orb-core">S</div>
+    </div>
+    <div class="hero-eyebrow">// builder profile &nbsp;·&nbsp; status: online</div>
+    <h1>Engineering worlds,<br>one system at a time.</h1>
+    <p class="tagline">
+      A hardware tinkerer and systems builder who moves fluidly between soldering irons,
+      game engines, and design docs — driven by the pull of taking something apart to
+      understand it, then rebuilding it better.
+    </p>
+    <div class="hero-stats">
+      <div class="hero-stat glass"><b>4</b><span>Active Projects</span></div>
+      <div class="hero-stat glass"><b>3</b><span>Domains Spanned</span></div>
+      <div class="hero-stat glass"><b>∞</b><span>Curiosity Level</span></div>
+    </div>
+    <div class="scroll-cue"><div class="stick"></div>SCROLL</div>
+  </section>
+
+  <!-- ============================================================
+       2. INTEREST RADAR
+       ============================================================ -->
+  <section class="section reveal" id="interests">
+    <div class="section-tag">01 / Interest Radar</div>
+    <h2 class="section-title">Where the Attention Goes</h2>
+    <div class="radar-layout">
+      <div class="radar-wrap">
+        <svg id="radarChart" width="320" height="320" viewBox="0 0 320 320"></svg>
+      </div>
+      <div class="radar-bars" id="radarBars"></div>
+    </div>
+  </section>
+
+  <!-- ============================================================
+       3. SKILLS
+       ============================================================ -->
+  <section class="section reveal" id="skills">
+    <div class="section-tag">02 / Skill Matrix</div>
+    <h2 class="section-title">Working Toolkit</h2>
+    <svg width="0" height="0">
+      <defs>
+        <linearGradient id="ringGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+          <stop offset="0%" stop-color="#3ea6ff"/>
+          <stop offset="100%" stop-color="#22e6d5"/>
+        </linearGradient>
+      </defs>
+    </svg>
+    <div class="skills-grid" id="skillsGrid"></div>
+  </section>
+
+  <!-- ============================================================
+       4. CURRENT PROJECTS
+       ============================================================ -->
+  <section class="section reveal" id="projects">
+    <div class="section-tag">03 / Active Builds</div>
+    <h2 class="section-title">Current Projects</h2>
+    <div class="project-grid">
+
+      <div class="project-card glass glow-border">
+        <div class="project-head">
+          <div>
+            <h3>FleetCraft</h3>
+          </div>
+          <span class="project-status status-active">Active</span>
+        </div>
+        <div class="project-icon">⚓</div>
+        <p>A Minecraft Fabric 1.21.1 mod centered on player-built medieval warships —
+        modular hull construction, cannon systems, a sail state machine, damage &amp;
+        sinking mechanics, and full multiplayer networking, backed by a multi-version
+        roadmap.</p>
+        <div class="project-tags"><span>Fabric 1.21.1</span><span>Java</span><span>Game Systems</span></div>
+      </div>
+
+      <div class="project-card glass glow-border">
+        <div class="project-head">
+          <div><h3>LearnLore</h3></div>
+          <span class="project-status status-r&d">R&amp;D</span>
+        </div>
+        <div class="project-icon">📚</div>
+        <p>A learning companion concept for turning scattered study material into
+        structured, self-paced knowledge trails — built around the idea that retention
+        comes from narrative, not just repetition.</p>
+        <div class="project-tags"><span>Concept</span><span>Learning Tools</span></div>
+      </div>
+
+      <div class="project-card glass glow-border">
+        <div class="project-head">
+          <div><h3>SPARK</h3></div>
+          <span class="project-status status-concept">Prototype</span>
+        </div>
+        <div class="project-icon">✦</div>
+        <p>A fast-idea-to-prototype pipeline — a lightweight scratchpad system for
+        capturing raw sparks of an idea before they're lost, and shepherding the good
+        ones into something buildable.</p>
+        <div class="project-tags"><span>Tooling</span><span>Workflow</span></div>
+      </div>
+
+      <div class="project-card glass glow-border">
+        <div class="project-head">
+          <div><h3>KENEYON-EL</h3></div>
+          <span class="project-status status-r&d">R&amp;D</span>
+        </div>
+        <div class="project-icon">◈</div>
+        <p>An experimental systems project currently in early architecture &amp;
+        exploration — details still taking shape as the concept solidifies.</p>
+        <div class="project-tags"><span>Experimental</span></div>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- ============================================================
+       5. LEARNING JOURNEY
+       ============================================================ -->
+  <section class="section reveal" id="journey">
+    <div class="section-tag">04 / Learning Style</div>
+    <h2 class="section-title">How the Learning Happens</h2>
+    <div class="flow-row">
+      <div class="flow-step glass"><h4>Take Apart</h4><p>Disassemble the thing — physically or conceptually — to see how it actually works.</p></div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-step glass"><h4>Map the System</h4><p>Build a mental model, connecting parts to purpose.</p></div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-step glass"><h4>Get Hands Dirty</h4><p>Learn by building — the fastest route to real understanding.</p></div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-step glass"><h4>Break It on Purpose</h4><p>Stress-test the build to find where it actually holds up.</p></div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-step glass"><h4>Rebuild Better</h4><p>Fold the lessons back in and iterate toward elegance.</p></div>
+    </div>
+  </section>
+
+  <!-- ============================================================
+       6. BUILDER MINDSET FLOW
+       ============================================================ -->
+  <section class="section reveal">
+    <div class="section-tag">05 / Builder Mindset</div>
+    <h2 class="section-title">From Curiosity to Craft</h2>
+    <div class="flow-row">
+      <div class="flow-step glass"><h4>Curiosity</h4><p>"What's actually going on in here?"</p></div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-step glass"><h4>Investigation</h4><p>Research, teardown, first principles.</p></div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-step glass"><h4>Architecture</h4><p>Design the system before touching code or components.</p></div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-step glass"><h4>Execution</h4><p>Build in tight, testable increments.</p></div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-step glass"><h4>Polish</h4><p>Refine until it feels inevitable.</p></div>
+    </div>
+  </section>
+
+  <!-- ============================================================
+       7/8. STRENGTHS & CHALLENGES
+       ============================================================ -->
+  <section class="section reveal">
+    <div class="section-tag">06 / Self-Assessment</div>
+    <h2 class="section-title">Strengths &amp; Current Challenges</h2>
+    <div class="dual-grid">
+      <div class="list-panel glass">
+        <h3 style="color:var(--cyan)">⚡ Strengths</h3>
+        <ul>
+          <li><span class="dot dot-strength"></span>Comfortable moving between hardware, software, and creative/emotional writing without losing depth in any of them.</li>
+          <li><span class="dot dot-strength"></span>Strong systems thinking — sees how sail states, cannon logic, and networking all need to talk to each other before writing a line of code.</li>
+          <li><span class="dot dot-strength"></span>Genuine hands-on resourcefulness — salvaging and repurposing hardware rather than buying new.</li>
+          <li><span class="dot dot-strength"></span>Appreciates both the plain-language explanation and the precise technical term — learns fast because of it.</li>
+        </ul>
+      </div>
+      <div class="list-panel glass">
+        <h3 style="color:var(--purple)">◈ Current Challenges</h3>
+        <ul>
+          <li><span class="dot dot-challenge"></span>Juggling several ambitious builds at once (FleetCraft, LearnLore, SPARK, KENEYON-EL) means context-switching cost.</li>
+          <li><span class="dot dot-challenge"></span>Turning early-stage R&amp;D concepts into shippable, documented milestones.</li>
+          <li><span class="dot dot-challenge"></span>Balancing deep technical scope (multiplayer networking, damage simulation) against realistic solo-dev bandwidth.</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============================================================
+       9. LONG-TERM VISION ROADMAP
+       ============================================================ -->
+  <section class="section reveal" id="vision">
+    <div class="section-tag">07 / Roadmap</div>
+    <h2 class="section-title">Long-Term Vision</h2>
+    <div class="roadmap glass" style="padding:10px 30px;">
+      <div class="roadmap-item">
+        <div class="roadmap-phase">PHASE 01</div>
+        <div><h4>Ship FleetCraft's Core Loop</h4><p>Stable ship construction, combat, and sinking mechanics playable end-to-end in multiplayer.</p></div>
+      </div>
+      <div class="roadmap-item">
+        <div class="roadmap-phase">PHASE 02</div>
+        <div><h4>Multi-Version Compatibility</h4><p>Extend FleetCraft across additional Minecraft versions per the mod's roadmap.</p></div>
+      </div>
+      <div class="roadmap-item">
+        <div class="roadmap-phase">PHASE 03</div>
+        <div><h4>Graduate the R&amp;D Line</h4><p>Move LearnLore, SPARK, and KENEYON-EL from concept sketches into working prototypes.</p></div>
+      </div>
+      <div class="roadmap-item">
+        <div class="roadmap-phase">PHASE 04</div>
+        <div><h4>Build a Cohesive Toolchain</h4><p>Let personal tools and hardware projects reinforce one another as a single builder ecosystem.</p></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============================================================
+       10. TIMELINE OF GROWTH
+       ============================================================ -->
+  <section class="section reveal" id="timeline">
+    <div class="section-tag">08 / Growth Log</div>
+    <h2 class="section-title">Timeline</h2>
+    <div class="timeline">
+      <div class="tl-item">
+        <div class="tl-dot"></div>
+        <div class="tl-date">EARLY BUILD</div>
+        <h4>Cyberdeck Salvage Build</h4>
+        <p>Harvested a screen, motherboard, RAM, SSD, WiFi card, and battery from a damaged laptop to house in a custom enclosure running Kali Linux.</p>
+      </div>
+      <div class="tl-item">
+        <div class="tl-dot"></div>
+        <div class="tl-date">RECENT</div>
+        <h4>Optics Exploration</h4>
+        <p>Investigated total internal reflection near a triangular prism's apex — a detour into applied physics.</p>
+      </div>
+      <div class="tl-item">
+        <div class="tl-dot"></div>
+        <div class="tl-date">ONGOING</div>
+        <h4>FleetCraft Architecture</h4>
+        <p>Designing ship construction, cannon systems, sail state machines, and networked damage/sinking mechanics for a full Fabric mod.</p>
+      </div>
+      <div class="tl-item">
+        <div class="tl-dot"></div>
+        <div class="tl-date">NOW</div>
+        <h4>This Dashboard</h4>
+        <p>A snapshot of where the builder mindset stands today.</p>
+      </div>
+    </div>
+  </section>
+
+</div>
+
+<!-- ============================================================
+     FOOTER
+     ============================================================ -->
+<footer>
+  <div class="logo">SHARMA<span>::</span>OS</div>
+  <p>Designed &amp; rendered as a single self-contained artifact — no frameworks, no build step.</p>
+  <div class="footer-links">
+    <span>v1.0</span>
+    <span>Builder Mode: ON</span>
+  </div>
+</footer>
+
+<script>
+/* ============================================================
+   BACKGROUND PARTICLES (lightweight canvas, no libraries)
+   ============================================================ */
+(function(){
+  const canvas = document.getElementById('bg-canvas');
+  const ctx = canvas.getContext('2d');
+  let w, h, particles = [];
+  const COUNT = 60;
+  const colors = ['#3ea6ff','#22e6d5','#a78bfa'];
+
+  function resize(){
+    w = canvas.width = window.innerWidth;
+    h = canvas.height = window.innerHeight;
+  }
+  function init(){
+    particles = [];
+    for(let i=0;i<COUNT;i++){
+      particles.push({
+        x:Math.random()*w, y:Math.random()*h,
+        r:Math.random()*1.8+0.6,
+        vx:(Math.random()-0.5)*0.25,
+        vy:(Math.random()-0.5)*0.25,
+        c:colors[Math.floor(Math.random()*colors.length)],
+        a:Math.random()*0.5+0.2
+      });
+    }
+  }
+  function tick(){
+    ctx.clearRect(0,0,w,h);
+    particles.forEach(p=>{
+      p.x += p.vx; p.y += p.vy;
+      if(p.x<0) p.x=w; if(p.x>w) p.x=0;
+      if(p.y<0) p.y=h; if(p.y>h) p.y=0;
+      ctx.beginPath();
+      ctx.arc(p.x,p.y,p.r,0,Math.PI*2);
+      ctx.fillStyle = p.c;
+      ctx.globalAlpha = p.a;
+      ctx.shadowBlur = 8;
+      ctx.shadowColor = p.c;
+      ctx.fill();
+    });
+    ctx.globalAlpha = 1;
+    requestAnimationFrame(tick);
+  }
+  window.addEventListener('resize', ()=>{resize(); init();});
+  resize(); init(); tick();
+})();
+
+/* ============================================================
+   SCROLL REVEAL
+   ============================================================ */
+(function(){
+  const items = document.querySelectorAll('.reveal');
+  const io = new IntersectionObserver((entries)=>{
+    entries.forEach(e=>{
+      if(e.isIntersecting){
+        e.target.classList.add('in-view');
+        io.unobserve(e.target);
+        triggerFillsIn(e.target);
+      }
+    });
+  }, {threshold:0.15});
+  items.forEach(i=>io.observe(i));
+
+  function triggerFillsIn(section){
+    section.querySelectorAll('.bar-fill').forEach(b=>{
+      b.style.width = b.dataset.value + '%';
+    });
+    section.querySelectorAll('.fg-ring').forEach(r=>{
+      const pct = r.dataset.value;
+      const offset = 245 - (245*pct/100);
+      r.style.strokeDashoffset = offset;
+    });
+  }
+})();
+
+/* ============================================================
+   INTEREST RADAR: bars + SVG polygon chart
+   ============================================================ */
+(function(){
+  const interests = [
+    {label:'Hardware / DIY Builds', value:92},
+    {label:'Game Systems Design', value:88},
+    {label:'Software Architecture', value:80},
+    {label:'Creative & Reflective Writing', value:74},
+    {label:'Security / Kali Toolset', value:66},
+  ];
+
+  // bars
+  const barsWrap = document.getElementById('radarBars');
+  interests.forEach(it=>{
+    const row = document.createElement('div');
+    row.className = 'bar-row';
+    row.innerHTML = `
+      <div class="bar-label"><span>${it.label}</span><span>${it.value}%</span></div>
+      <div class="bar-track"><div class="bar-fill" data-value="${it.value}"></div></div>
+    `;
+    barsWrap.appendChild(row);
+  });
+
+  // radar polygon
+  const svg = document.getElementById('radarChart');
+  const cx=160, cy=160, maxR=120;
+  const n = interests.length;
+  const levels = 4;
+  const ns = 'http://www.w3.org/2000/svg';
+
+  // grid rings
+  for(let l=1; l<=levels; l++){
+    const r = (maxR/levels)*l;
+    let pts = [];
+    for(let i=0;i<n;i++){
+      const ang = (Math.PI*2*i/n) - Math.PI/2;
+      pts.push(`${cx+r*Math.cos(ang)},${cy+r*Math.sin(ang)}`);
+    }
+    const poly = document.createElementNS(ns,'polygon');
+    poly.setAttribute('points', pts.join(' '));
+    poly.setAttribute('fill','none');
+    poly.setAttribute('stroke','rgba(120,160,255,0.14)');
+    svg.appendChild(poly);
+  }
+  // axes + labels
+  interests.forEach((it,i)=>{
+    const ang = (Math.PI*2*i/n) - Math.PI/2;
+    const x2 = cx+maxR*Math.cos(ang), y2 = cy+maxR*Math.sin(ang);
+    const line = document.createElementNS(ns,'line');
+    line.setAttribute('x1',cx); line.setAttribute('y1',cy);
+    line.setAttribute('x2',x2); line.setAttribute('y2',y2);
+    line.setAttribute('stroke','rgba(120,160,255,0.14)');
+    svg.appendChild(line);
+  });
+  // data polygon (animated draw-in)
+  let dataPts = [];
+  interests.forEach((it,i)=>{
+    const ang = (Math.PI*2*i/n) - Math.PI/2;
+    const r = (maxR*it.value/100);
+    dataPts.push([cx+r*Math.cos(ang), cy+r*Math.sin(ang)]);
+  });
+  const dataPoly = document.createElementNS(ns,'polygon');
+  dataPoly.setAttribute('points', dataPts.map(p=>p.join(',')).join(' '));
+  dataPoly.setAttribute('fill','rgba(62,166,255,0.22)');
+  dataPoly.setAttribute('stroke','#22e6d5');
+  dataPoly.setAttribute('stroke-width','2');
+  dataPoly.style.opacity='0';
+  dataPoly.style.transition='opacity 1s ease 0.3s';
+  svg.appendChild(dataPoly);
+  dataPts.forEach(p=>{
+    const dot = document.createElementNS(ns,'circle');
+    dot.setAttribute('cx',p[0]); dot.setAttribute('cy',p[1]); dot.setAttribute('r',4);
+    dot.setAttribute('fill','#3ea6ff');
+    svg.appendChild(dot);
+  });
+
+  const radarIo = new IntersectionObserver((entries)=>{
+    entries.forEach(e=>{
+      if(e.isIntersecting){ dataPoly.style.opacity='1'; radarIo.disconnect(); }
+    });
+  }, {threshold:0.2});
+  radarIo.observe(document.getElementById('interests'));
+})();
+
+/* ============================================================
+   SKILLS GRID (ring progress)
+   ============================================================ */
+(function(){
+  const skills = [
+    {name:'Modding / Java', pct:85, note:'Fabric API, mixins'},
+    {name:'Hardware Salvage', pct:88, note:'Enclosures, wiring'},
+    {name:'Systems Design', pct:80, note:'State machines'},
+    {name:'Networking', pct:65, note:'Multiplayer sync'},
+    {name:'Kali / Security', pct:60, note:'Recon toolset'},
+    {name:'Technical Writing', pct:78, note:'Docs & specs'},
+  ];
+  const grid = document.getElementById('skillsGrid');
+  skills.forEach(s=>{
+    const card = document.createElement('div');
+    card.className = 'skill-card glass glow-border';
+    card.innerHTML = `
+      <div class="skill-ring">
+        <svg width="86" height="86" viewBox="0 0 86 86">
+          <circle class="bg-ring" cx="43" cy="43" r="39"/>
+          <circle class="fg-ring" data-value="${s.pct}" cx="43" cy="43" r="39"/>
+        </svg>
+        <div class="pct">${s.pct}%</div>
+      </div>
+      <h4>${s.name}</h4>
+      <p>${s.note}</p>
+    `;
+    grid.appendChild(card);
+  });
+})();
+
+/* ============================================================
+   CARD TILT / HOVER MICRO-INTERACTION
+   ============================================================ */
+(function(){
+  const cards = document.querySelectorAll('.project-card, .skill-card');
+  cards.forEach(card=>{
+    card.addEventListener('mousemove', e=>{
+      const r = card.getBoundingClientRect();
+      const x = e.clientX - r.left, y = e.clientY - r.top;
+      const rx = ((y / r.height) - 0.5) * -6;
+      const ry = ((x / r.width) - 0.5) * 6;
+      card.style.transform = `perspective(600px) rotateX(${rx}deg) rotateY(${ry}deg) translateY(-4px)`;
+    });
+    card.addEventListener('mouseleave', ()=>{
+      card.style.transform = '';
+    });
+  });
+})();
+
+/* ============================================================
+   SUBTLE PARALLAX ON HERO ORB
+   ============================================================ */
+(function(){
+  const orb = document.querySelector('.hero-orb');
+  window.addEventListener('scroll', ()=>{
+    const y = window.scrollY;
+    if(orb) orb.style.transform = `translateY(${y*0.15}px)`;
+  }, {passive:true});
+})();
+</script>
+</body>
+</html>

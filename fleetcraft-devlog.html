@@ -1,0 +1,772 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>FleetCraft — Captain's Dev Log</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500;600;700&family=Spectral:ital,wght@0,400;0,500;0,600;1,400&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/mermaid/10.9.1/mermaid.min.js"></script>
+<style>
+  :root{
+    --navy-deep:#0A1F33;
+    --navy-mid:#123259;
+    --navy-line:#28507d;
+    --parchment:#EFE7D2;
+    --parchment-dim:#dcd2b6;
+    --brass:#C6963B;
+    --brass-dim:#8f6b26;
+    --oxblood:#9a4430;
+    --teal:#3d8079;
+    --ink:#171510;
+    --max-w:920px;
+  }
+  *{box-sizing:border-box; margin:0; padding:0;}
+  html{scroll-behavior:smooth;}
+  body{
+    background:var(--navy-deep);
+    background-image:
+      linear-gradient(var(--navy-line) 1px, transparent 1px),
+      linear-gradient(90deg, var(--navy-line) 1px, transparent 1px);
+    background-size:44px 44px;
+    background-attachment:fixed;
+    color:var(--parchment);
+    font-family:'Spectral', serif;
+    line-height:1.65;
+  }
+  @media (prefers-reduced-motion: reduce){
+    *{animation-duration:0.001ms !important; animation-iteration-count:1 !important; transition-duration:0.001ms !important; scroll-behavior:auto !important;}
+  }
+
+  h1,h2,h3,.disp{ font-family:'Cinzel', serif; letter-spacing:0.02em; }
+  .mono{ font-family:'JetBrains Mono', monospace; }
+
+  a{ color:var(--brass); }
+  a:focus-visible, button:focus-visible{ outline:2px solid var(--brass); outline-offset:3px; }
+
+  /* ---------- top bar ---------- */
+  .topbar{
+    position:fixed; top:0; left:0; right:0; z-index:50;
+    display:flex; align-items:center; justify-content:space-between;
+    padding:14px 28px;
+    background:rgba(10,31,51,0.88);
+    backdrop-filter:blur(6px);
+    border-bottom:1px solid var(--navy-line);
+  }
+  .brand{ display:flex; align-items:center; gap:10px; font-family:'Cinzel',serif; font-size:0.95rem; letter-spacing:0.12em; text-transform:uppercase; color:var(--parchment);}
+  .brand svg{ width:22px; height:22px; }
+  .topbar .tag{ font-family:'JetBrains Mono',monospace; font-size:0.72rem; color:var(--brass); opacity:0.8; display:none; }
+  @media(min-width:640px){ .topbar .tag{ display:block; } }
+
+  /* ---------- side log nav ---------- */
+  .lognav{
+    position:fixed; right:18px; top:50%; transform:translateY(-50%);
+    z-index:40; display:none; flex-direction:column; gap:9px;
+  }
+  @media(min-width:1180px){ .lognav{ display:flex; } }
+  .lognav button{
+    width:9px; height:9px; border-radius:50%;
+    background:transparent; border:1px solid var(--brass-dim);
+    cursor:pointer; padding:0; position:relative;
+    transition:background .25s, border-color .25s, transform .25s;
+  }
+  .lognav button.active{ background:var(--brass); border-color:var(--brass); transform:scale(1.35); }
+  .lognav button .lbl{
+    position:absolute; right:20px; top:50%; transform:translateY(-50%);
+    white-space:nowrap; font-family:'JetBrains Mono',monospace; font-size:0.68rem;
+    color:var(--parchment); background:var(--navy-mid); border:1px solid var(--navy-line);
+    padding:3px 8px; opacity:0; pointer-events:none; transition:opacity .2s;
+  }
+  .lognav button:hover .lbl{ opacity:1; }
+
+  /* ---------- hero ---------- */
+  .hero{
+    min-height:100svh; display:flex; flex-direction:column; align-items:center; justify-content:center;
+    text-align:center; padding:120px 24px 80px; position:relative; overflow:hidden;
+  }
+  .compass{
+    width:150px; height:150px; margin-bottom:34px; opacity:0.92;
+    animation:spin 90s linear infinite;
+  }
+  @keyframes spin{ to{ transform:rotate(360deg); } }
+  .hero .eyebrow{
+    font-family:'JetBrains Mono',monospace; font-size:0.78rem; letter-spacing:0.3em;
+    text-transform:uppercase; color:var(--brass); margin-bottom:18px;
+  }
+  .hero h1{
+    font-size:clamp(2.6rem, 7vw, 5.2rem); font-weight:700; color:var(--parchment);
+    line-height:1.02; text-shadow:0 2px 24px rgba(198,150,58,0.15);
+  }
+  .hero .sub{
+    margin-top:20px; max-width:560px; font-size:1.15rem; color:var(--parchment-dim); font-style:italic;
+  }
+  .hero .divider{ width:120px; height:1px; background:var(--brass-dim); margin:32px auto; position:relative; }
+  .hero .divider::before{ content:'⚓'; position:absolute; left:50%; top:50%; transform:translate(-50%,-50%); background:var(--navy-deep); padding:0 10px; color:var(--brass); font-size:0.9rem; }
+  .hero .meta{ font-family:'JetBrains Mono',monospace; font-size:0.8rem; color:var(--brass-dim); }
+  .scrollcue{ margin-top:56px; font-family:'JetBrains Mono',monospace; font-size:0.7rem; color:var(--parchment-dim); letter-spacing:0.15em; opacity:0.7; }
+  .scrollcue::after{ content:''; display:block; width:1px; height:34px; background:linear-gradient(var(--brass), transparent); margin:10px auto 0; animation:drip 2.4s ease-in-out infinite; }
+  @keyframes drip{ 0%,100%{ opacity:0.2; } 50%{ opacity:1; } }
+
+  /* ---------- section shell ---------- */
+  section.entry{ max-width:var(--max-w); margin:0 auto; padding:100px 24px 20px; scroll-margin-top:80px; }
+  .entry-head{ display:flex; align-items:baseline; gap:16px; margin-bottom:10px; }
+  .entry-num{ font-family:'JetBrains Mono',monospace; color:var(--brass); font-size:0.95rem; }
+  .entry-head h2{ font-size:clamp(1.5rem,3.4vw,2.1rem); color:var(--parchment); font-weight:600; }
+  .entry-kicker{ font-family:'JetBrains Mono',monospace; font-size:0.75rem; color:var(--brass-dim); text-transform:uppercase; letter-spacing:0.14em; margin-bottom:26px; padding-left:52px; }
+  .entry-body{ color:var(--parchment-dim); font-size:1.02rem; margin-bottom:26px; max-width:64ch; }
+  .entry-body strong{ color:var(--parchment); font-weight:600; }
+
+  /* ---------- blueprint panel (mermaid host) ---------- */
+  .panel{
+    background:var(--navy-mid); border:1px solid var(--navy-line);
+    border-radius:2px; padding:28px 22px; position:relative; overflow-x:auto;
+  }
+  .panel::before, .panel::after{
+    content:''; position:absolute; width:14px; height:14px; border:2px solid var(--brass-dim);
+    top:8px; left:8px; border-right:none; border-bottom:none;
+  }
+  .panel::after{ top:auto; left:auto; bottom:8px; right:8px; border:2px solid var(--brass-dim); border-left:none; border-top:none; }
+  .panel .cap{ font-family:'JetBrains Mono',monospace; font-size:0.7rem; color:var(--brass-dim); margin-bottom:14px; text-transform:uppercase; letter-spacing:0.1em; }
+  .panel .mermaid{ display:flex; justify-content:center; }
+
+  /* ---------- manifest / terminal block ---------- */
+  .manifest{
+    background:var(--navy-deep); border:1px solid var(--navy-line); border-left:3px solid var(--brass);
+    padding:20px 22px; font-family:'JetBrains Mono',monospace; font-size:0.82rem; color:var(--parchment-dim);
+    white-space:pre; overflow-x:auto; line-height:1.5;
+  }
+
+  /* ---------- ship class cards ---------- */
+  .fleet{ display:grid; grid-template-columns:1fr; gap:16px; }
+  @media(min-width:760px){ .fleet{ grid-template-columns:repeat(3,1fr); } }
+  .ship-card{
+    background:var(--navy-mid); border:1px solid var(--navy-line); padding:22px 20px;
+    position:relative; transition:border-color .25s, transform .25s;
+  }
+  .ship-card:hover{ border-color:var(--brass-dim); transform:translateY(-3px); }
+  .ship-card h3{ color:var(--brass); font-size:1.15rem; margin-bottom:4px; }
+  .ship-card .rank{ font-family:'JetBrains Mono',monospace; font-size:0.68rem; color:var(--parchment-dim); text-transform:uppercase; letter-spacing:0.12em; margin-bottom:16px; display:block; }
+  .ship-card dl{ display:grid; grid-template-columns:auto 1fr; gap:6px 12px; font-size:0.85rem; }
+  .ship-card dt{ color:var(--parchment-dim); font-family:'JetBrains Mono',monospace; }
+  .ship-card dd{ color:var(--parchment); text-align:right; }
+
+  /* ---------- roadmap route ---------- */
+  .route{ position:relative; padding-left:34px; margin-top:10px; }
+  .route::before{ content:''; position:absolute; left:8px; top:6px; bottom:6px; width:1px; background:repeating-linear-gradient(var(--brass-dim) 0 6px, transparent 6px 12px); }
+  .port{ position:relative; padding:0 0 30px 20px; }
+  .port::before{ content:''; position:absolute; left:-30px; top:4px; width:9px; height:9px; border-radius:50%; background:var(--navy-deep); border:2px solid var(--brass); }
+  .port .v{ font-family:'JetBrains Mono',monospace; color:var(--brass); font-size:0.82rem; }
+  .port .f{ color:var(--parchment); font-weight:600; margin:2px 0 3px; }
+  .port .d{ color:var(--parchment-dim); font-size:0.88rem; }
+  .port.current::before{ background:var(--brass); box-shadow:0 0 0 4px rgba(198,150,58,0.18); }
+
+  .postroute{ display:flex; flex-wrap:wrap; gap:10px; align-items:center; }
+  .postroute .stop{ font-family:'JetBrains Mono',monospace; font-size:0.82rem; color:var(--parchment); border:1px solid var(--navy-line); padding:8px 12px; background:var(--navy-mid); }
+  .postroute .arrow{ color:var(--brass-dim); }
+
+  /* ---------- closing ---------- */
+  .closing{ max-width:var(--max-w); margin:0 auto; padding:120px 24px 160px; text-align:center; }
+  .closing blockquote{
+    font-family:'Cinzel',serif; font-size:clamp(1.3rem,3vw,1.9rem); color:var(--parchment);
+    line-height:1.5; border-top:1px solid var(--brass-dim); border-bottom:1px solid var(--brass-dim);
+    padding:34px 10px; margin-bottom:26px;
+  }
+  .closing p{ color:var(--parchment-dim); max-width:60ch; margin:0 auto; }
+  footer{ text-align:center; padding:30px; font-family:'JetBrains Mono',monospace; font-size:0.72rem; color:var(--brass-dim); }
+
+  ::selection{ background:var(--brass); color:var(--navy-deep); }
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <div class="brand">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M12 2v20M8 5h8M4 21h16M6 12c0 3.3 2.7 6 6 6s6-2.7 6-6H6z"/></svg>
+    FleetCraft
+  </div>
+  <div class="tag mono">FABRIC 1.21.1 · DEV LOG v0.0</div>
+</div>
+
+<nav class="lognav" id="lognav" aria-label="Section navigation"></nav>
+
+<!-- HERO -->
+<section class="hero">
+  <svg class="compass" viewBox="0 0 100 100" aria-hidden="true">
+    <circle cx="50" cy="50" r="46" fill="none" stroke="#C6963B" stroke-width="1"/>
+    <circle cx="50" cy="50" r="38" fill="none" stroke="#8f6b26" stroke-width="0.6"/>
+    <g stroke="#C6963B" stroke-width="1">
+      <line x1="50" y1="4" x2="50" y2="16"/>
+      <line x1="50" y1="84" x2="50" y2="96"/>
+      <line x1="4" y1="50" x2="16" y2="50"/>
+      <line x1="84" y1="50" x2="96" y2="50"/>
+    </g>
+    <polygon points="50,14 56,50 50,86 44,50" fill="#EFE7D2" opacity="0.9"/>
+    <polygon points="14,50 50,44 86,50 50,56" fill="#9a4430" opacity="0.85"/>
+    <circle cx="50" cy="50" r="3" fill="#0A1F33" stroke="#C6963B"/>
+  </svg>
+  <div class="eyebrow">Minecraft Fabric Mod · Ship's Log</div>
+  <h1>FLEETCRAFT</h1>
+  <p class="sub">Build your own medieval warship, plank by plank &mdash; and command it.</p>
+  <div class="divider"></div>
+  <p class="meta">17 LOGGED ENTRIES · CORE → COMBAT → NETWORKING → OCEAN EXPANSION</p>
+  <div class="scrollcue">DESCEND TO THE DRYDOCK</div>
+</section>
+
+<!-- 01 -->
+<section class="entry" id="s1" data-title="High-Level Architecture">
+  <div class="entry-head"><span class="entry-num">01</span><h2>High-Level Architecture</h2></div>
+  <p class="entry-kicker">Player intent → living entity</p>
+  <p class="entry-body">A ship begins as free-form construction and ends as a persisted, tickable entity. Every stage between is a gate: nothing becomes a <strong>Ship Entity</strong> until it has been scanned, validated, and classified.</p>
+  <div class="panel">
+    <div class="cap">Fig. 01 — Pipeline overview</div>
+    <div class="mermaid">
+flowchart TD
+    A[Player] --> B[Ship Construction]
+    B --> C[Ship Scanner]
+    C --> D[Validation Engine]
+    D --> E[Ship Classification]
+    E --> F[Launch Sequence]
+    F --> G[Ship Entity]
+    G --> H[Gameplay Systems]
+    H --> I[Save Data / Persistence]
+    I -.load on rejoin.-> G
+    </div>
+  </div>
+</section>
+
+<!-- 02 -->
+<section class="entry" id="s2" data-title="Module Hierarchy">
+  <div class="entry-head"><span class="entry-num">02</span><h2>Programming Module Hierarchy</h2></div>
+  <p class="entry-kicker">core · client · server · network · data</p>
+  <p class="entry-body">Five top-level packages keep simulation, presentation, and persistence cleanly separated &mdash; standard Fabric client/server split, with a dedicated <strong>network</strong> layer for state sync.</p>
+  <div class="panel">
+    <div class="cap">Fig. 02 — Package tree</div>
+    <div class="mermaid">
+flowchart TD
+    Root[fleetcraft] --> Core[core]
+    Root --> Client[client]
+    Root --> Server[server]
+    Root --> Network[network]
+    Root --> Data[data]
+
+    Core --> ShipEntity[entity.ShipEntity]
+    Core --> ShipModule[entity.module.*]
+    Core --> Scanner[scan.ShipScanner]
+    Core --> Validator[scan.ShipValidator]
+    Core --> Classifier[scan.ShipClassifier]
+    Core --> Physics[physics.ShipPhysics]
+    Core --> Wind[physics.WindSystem]
+    Core --> Damage[combat.DamageSystem]
+    Core --> Cannon[combat.CannonSystem]
+    Core --> Sail[sail.SailSystem]
+    Core --> Crew[crew.CrewSystem]
+
+    Client --> Renderer[render.ShipRenderer]
+    Client --> GUIScreens[gui.*]
+    Client --> Particles[fx.ParticleFX]
+
+    Server --> WorldTick[tick.ShipTicker]
+    Server --> ChunkAnchor[world.ShipChunkAnchor]
+
+    Network --> Packets[packet.*]
+    Network --> Sync[sync.ShipSyncManager]
+
+    Data --> NBT[save.ShipNbtIO]
+    Data --> Blueprint[save.BlueprintSerializer]
+    </div>
+  </div>
+</section>
+
+<!-- 03 -->
+<section class="entry" id="s3" data-title="Folder Structure">
+  <div class="entry-head"><span class="entry-num">03</span><h2>Folder Structure</h2></div>
+  <p class="entry-kicker">net.fleetcraft — full source layout</p>
+  <div class="manifest">fleetcraft/
+├── src/main/java/net/fleetcraft/
+│   ├── FleetCraft.java
+│   ├── core/
+│   │   ├── entity/
+│   │   │   ├── ShipEntity.java
+│   │   │   └── module/
+│   │   │       ├── HullModule.java
+│   │   │       ├── MastModule.java
+│   │   │       ├── RudderModule.java
+│   │   │       ├── AnchorModule.java
+│   │   │       └── CannonModule.java
+│   │   ├── scan/
+│   │   │   ├── ShipScanner.java
+│   │   │   ├── ShipValidator.java
+│   │   │   └── ShipClassifier.java
+│   │   ├── physics/
+│   │   │   ├── ShipPhysics.java
+│   │   │   ├── BuoyancySolver.java
+│   │   │   └── WindSystem.java
+│   │   ├── combat/
+│   │   │   ├── DamageSystem.java
+│   │   │   ├── CannonSystem.java
+│   │   │   └── Projectile.java
+│   │   ├── sail/SailSystem.java
+│   │   └── crew/CrewSystem.java
+│   ├── client/
+│   │   ├── render/ShipRenderer.java
+│   │   ├── gui/
+│   │   │   ├── ShipDashboardScreen.java
+│   │   │   ├── CargoScreen.java
+│   │   │   └── ShipLogScreen.java
+│   │   └── fx/ParticleFX.java
+│   ├── server/
+│   │   ├── tick/ShipTicker.java
+│   │   └── world/ShipChunkAnchor.java
+│   ├── network/
+│   │   ├── packet/
+│   │   │   ├── C2SHelmInputPacket.java
+│   │   │   ├── S2CShipStatePacket.java
+│   │   │   └── S2CDamagePacket.java
+│   │   └── sync/ShipSyncManager.java
+│   └── data/
+│       ├── save/ShipNbtIO.java
+│       └── save/BlueprintSerializer.java
+├── src/main/resources/
+│   ├── fabric.mod.json
+│   ├── assets/fleetcraft/ (models, textures, sounds)
+│   └── data/fleetcraft/ (loot tables, recipes)
+└── build.gradle</div>
+</section>
+
+<!-- 04 -->
+<section class="entry" id="s4" data-title="Validation Flow">
+  <div class="entry-head"><span class="entry-num">04</span><h2>Ship Validation Flow</h2></div>
+  <p class="entry-kicker">The pre-launch inspection</p>
+  <p class="entry-body">Right-click the helm and the inspection begins. Every gate below must pass in order &mdash; hull, helm, anchor, rudder, masts, sails, cannons, crew, weight, center of mass, buoyancy &mdash; before a hull earns the right to be called a ship.</p>
+  <div class="panel">
+    <div class="cap">Fig. 04 — Inspection gate chain</div>
+    <div class="mermaid">
+flowchart TD
+    Start([Player Right-Clicks Helm Block]) --> Hull{Connected Hull?}
+    Hull -- No --> Fail
+    Hull -- Yes --> Helm{Helm Present?}
+    Helm -- No --> Fail
+    Helm -- Yes --> Anchor{Anchor Present?}
+    Anchor -- No --> Fail
+    Anchor -- Yes --> Rudder{Rudder Present?}
+    Rudder -- No --> Fail
+    Rudder -- Yes --> Masts{Masts Present?}
+    Masts -- No --> Fail
+    Masts -- Yes --> Sails{Sails Attached?}
+    Sails -- No --> Fail
+    Sails -- Yes --> Cannons{Cannons Valid?}
+    Cannons -- No --> Fail
+    Cannons -- Yes --> Crew{Crew Seats Valid?}
+    Crew -- No --> Fail
+    Crew -- Yes --> Weight{Weight Distribution OK?}
+    Weight -- No --> Fail
+    Weight -- Yes --> COM{Center of Mass OK?}
+    COM -- No --> Fail
+    COM -- Yes --> Buoy{Buoyancy Calculable?}
+    Buoy -- No --> Fail
+    Buoy -- Yes --> Class[Class Detection]
+    Class --> Ready([Launch Ready])
+    Fail[Display Error Report] --> End([Return to Build Mode])
+    </div>
+  </div>
+</section>
+
+<!-- 05 -->
+<section class="entry" id="s5" data-title="Ship Classes">
+  <div class="entry-head"><span class="entry-num">05</span><h2>Ship Classes Progression</h2></div>
+  <p class="entry-kicker">Sloop → Frigate → Galleon</p>
+  <p class="entry-body">Classification is automatic, derived purely from hull block count at scan time. Bigger hulls trade speed for broadsides and cargo.</p>
+  <div class="fleet">
+    <div class="ship-card">
+      <h3>Small Sloop</h3>
+      <span class="rank">Fast &amp; nimble</span>
+      <dl>
+        <dt>Hull</dt><dd>≤ 40 blocks</dd>
+        <dt>Masts</dt><dd>1</dd>
+        <dt>Cannons</dt><dd>2 max</dd>
+        <dt>Crew</dt><dd>1–2</dd>
+        <dt>Speed</dt><dd>Fast</dd>
+      </dl>
+    </div>
+    <div class="ship-card">
+      <h3>Medium Frigate</h3>
+      <span class="rank">Balanced workhorse</span>
+      <dl>
+        <dt>Hull</dt><dd>41–150 blocks</dd>
+        <dt>Masts</dt><dd>2</dd>
+        <dt>Cannons</dt><dd>8 max</dd>
+        <dt>Crew</dt><dd>3–6</dd>
+        <dt>Speed</dt><dd>Balanced</dd>
+      </dl>
+    </div>
+    <div class="ship-card">
+      <h3>Large Galleon</h3>
+      <span class="rank">Slow &amp; powerful</span>
+      <dl>
+        <dt>Hull</dt><dd>151+ blocks</dd>
+        <dt>Masts</dt><dd>3+</dd>
+        <dt>Cannons</dt><dd>20 max</dd>
+        <dt>Crew</dt><dd>7–12</dd>
+        <dt>Speed</dt><dd>Slow, powerful</dd>
+      </dl>
+    </div>
+  </div>
+</section>
+
+<!-- 06 -->
+<section class="entry" id="s6" data-title="ShipEntity Composition">
+  <div class="entry-head"><span class="entry-num">06</span><h2>ShipEntity Composition</h2></div>
+  <p class="entry-kicker">One entity, eleven subsystems</p>
+  <p class="entry-body">Every ship is a single entity that owns physics, rendering, collision, damage, cannons, sails, wind handling, crew, inventory, network sync, and save data.</p>
+  <div class="panel">
+    <div class="cap">Fig. 06 — Composition (ERD)</div>
+    <div class="mermaid">
+erDiagram
+    SHIP_ENTITY ||--|| PHYSICS : has
+    SHIP_ENTITY ||--|| RENDERER : has
+    SHIP_ENTITY ||--|| COLLISION : has
+    SHIP_ENTITY ||--|| DAMAGE_SYSTEM : has
+    SHIP_ENTITY ||--o{ CANNON_SYSTEM : has
+    SHIP_ENTITY ||--|| SAIL_SYSTEM : has
+    SHIP_ENTITY ||--|| WIND_HANDLER : has
+    SHIP_ENTITY ||--o{ CREW : carries
+    SHIP_ENTITY ||--|| INVENTORY : has
+    SHIP_ENTITY ||--|| NETWORK_SYNC : has
+    SHIP_ENTITY ||--|| SAVE_DATA : has
+
+    SAVE_DATA {
+        uuid ShipUUID
+        string ShipName
+        string ShipClass
+        blob Blueprint
+        int DamageState
+        list Cargo
+        list Crew
+        vec3 Location
+    }
+    </div>
+  </div>
+</section>
+
+<!-- 07 -->
+<section class="entry" id="s7" data-title="Cannon System">
+  <div class="entry-head"><span class="entry-num">07</span><h2>Cannon System Flow</h2></div>
+  <p class="entry-kicker">Aim → elevation → traverse → fire</p>
+  <p class="entry-body">Both cannon sizes share one firing loop: aim within elevation and traverse limits, confirm loaded, fire with smoke and recoil, spawn a projectile, resolve collision, then start the reload timer.</p>
+  <div class="panel">
+    <div class="cap">Fig. 07 — Firing loop</div>
+    <div class="mermaid">
+flowchart TD
+    Type{Cannon Type}
+    Type -->|Small| Aim
+    Type -->|Large| Aim
+    Aim[Aim Input] --> Elev{Elevation In Range?}
+    Elev -- No --> Aim
+    Elev -- Yes --> Trav{Traverse In Range?}
+    Trav -- No --> Aim
+    Trav -- Yes --> Loaded{Loaded?}
+    Loaded -- No --> Reload
+    Loaded -- Yes --> Fire[Fire]
+    Fire --> Smoke[Spawn Smoke FX]
+    Fire --> Recoil[Apply Recoil Force]
+    Fire --> Projectile[Spawn Projectile]
+    Projectile --> Collision{Collision Detected?}
+    Collision -- No --> Projectile
+    Collision -- Yes --> Damage[Apply Damage to Target]
+    Damage --> Reload[Reload Timer]
+    Reload --> Loaded
+    </div>
+  </div>
+</section>
+
+<!-- 08 -->
+<section class="entry" id="s8" data-title="Sail System">
+  <div class="entry-head"><span class="entry-num">08</span><h2>Sail System Flow</h2></div>
+  <p class="entry-kicker">Furled → half → full sail</p>
+  <p class="entry-body">Sail state drives a wind modifier, which drives acceleration, which drives speed and turning &mdash; a small closed loop that keeps sailing readable at a glance.</p>
+  <div class="panel">
+    <div class="cap">Fig. 08 — Sail state machine</div>
+    <div class="mermaid">
+stateDiagram-v2
+    [*] --> Furled
+    Furled --> HalfSail: Raise
+    HalfSail --> FullSail: Raise
+    FullSail --> HalfSail: Lower
+    HalfSail --> Furled: Lower
+    FullSail --> WindModifier
+    HalfSail --> WindModifier
+    WindModifier --> Acceleration
+    Acceleration --> Speed
+    Speed --> Turning
+    Turning --> Speed
+    </div>
+  </div>
+</section>
+
+<!-- 09 -->
+<section class="entry" id="s9" data-title="Damage Flow">
+  <div class="entry-head"><span class="entry-num">09</span><h2>Damage Flow</h2></div>
+  <p class="entry-kicker">Impact → module → flooding → broken</p>
+  <p class="entry-body">Every hit resolves to a specific module &mdash; hull, mast, rudder, anchor, cannons, or sails. Hull breaches start flooding; either path can push a module past its damage threshold into a broken state.</p>
+  <div class="panel">
+    <div class="cap">Fig. 09 — Damage resolution</div>
+    <div class="mermaid">
+flowchart TD
+    Hit[Projectile Hit] --> Calc[Impact Calculation]
+    Calc --> Module{Determine Module}
+    Module --> Hull
+    Module --> Mast
+    Module --> Rudder
+    Module --> Anchor
+    Module --> Cannons
+    Module --> Sails
+    Hull --> Apply[Apply Damage]
+    Mast --> Apply
+    Rudder --> Apply
+    Anchor --> Apply
+    Cannons --> Apply
+    Sails --> Apply
+    Apply --> Flood{Hull Breach?}
+    Flood -- Yes --> Flooding
+    Flood -- No --> Broken{Threshold Exceeded?}
+    Flooding --> Broken
+    Broken -- Yes --> BrokenState[Broken State]
+    Broken -- No --> Apply
+    BrokenState --> Sinking{Flooding Critical?}
+    Sinking -- Yes --> SinkingState[Sinking State]
+    </div>
+  </div>
+</section>
+
+<!-- 10 -->
+<section class="entry" id="s10" data-title="Sinking Sequence">
+  <div class="entry-head"><span class="entry-num">10</span><h2>Sinking Animation Sequence</h2></div>
+  <p class="entry-kicker">Flooding → listing → the depths</p>
+  <p class="entry-body">Critical damage triggers a readable death: the ship lists, bow or stern sinks first, crew fall overboard, debris and bubbles spawn, then the ship disappears and loot floats to the surface.</p>
+  <div class="panel">
+    <div class="cap">Fig. 10 — Sinking sequence</div>
+    <div class="mermaid">
+flowchart TD
+    Crit[Critical Damage] --> Flood[Flooding]
+    Flood --> Water[Water Filling Interior]
+    Water --> List[Ship Lists / Tilts]
+    List --> Ends[Bow/Stern Sinks First]
+    Ends --> CrewFall[Crew Falls Overboard]
+    Ends --> Debris[Debris Spawns]
+    Ends --> Smoke[Smoke FX]
+    Ends --> Bubbles[Bubble FX]
+    CrewFall --> Disappear[Ship Disappears]
+    Debris --> Disappear
+    Smoke --> Disappear
+    Bubbles --> Disappear
+    Disappear --> Loot[Loot Floats to Surface]
+    </div>
+  </div>
+</section>
+
+<!-- 11 -->
+<section class="entry" id="s11" data-title="Networking">
+  <div class="entry-head"><span class="entry-num">11</span><h2>Multiplayer / Networking Flow</h2></div>
+  <p class="entry-kicker">Client input → server authority → interpolated render</p>
+  <p class="entry-body">Helm, sail, and cannon input is serialized client-side, validated and physics-stepped server-side, then broadcast back for client interpolation.</p>
+  <div class="panel">
+    <div class="cap">Fig. 11 — Packet round-trip</div>
+    <div class="mermaid">
+sequenceDiagram
+    participant P as Player Input
+    participant C as Client
+    participant N as Network Packet
+    participant S as Server
+    participant Ph as Physics
+    participant V as Validation
+
+    P->>C: Helm/Sail/Cannon Input
+    C->>N: Serialize C2S Packet
+    N->>S: Transmit
+    S->>V: Validate Action
+    V->>Ph: Apply Physics Step
+    Ph->>S: Updated Ship State
+    S->>N: S2C State Packet
+    N->>C: Transmit
+    C->>C: Interpolation
+    C->>C: Render Frame
+    </div>
+  </div>
+</section>
+
+<!-- 12 -->
+<section class="entry" id="s12" data-title="Save System">
+  <div class="entry-head"><span class="entry-num">12</span><h2>Save System</h2></div>
+  <p class="entry-kicker">UUID → blueprint → NBT</p>
+  <p class="entry-body">A ship's identity, class, blueprint, damage state, cargo, crew, and location chain together into one NBT record, reconstructed on chunk load.</p>
+  <div class="panel">
+    <div class="cap">Fig. 12 — Persistence chain</div>
+    <div class="mermaid">
+flowchart TD
+    UUID[Ship UUID] --> Name[Ship Name]
+    Name --> Class[Ship Class]
+    Class --> Blueprint[Blueprint - Block Palette Map]
+    Blueprint --> Dmg[Damage State]
+    Dmg --> Cargo[Cargo/Inventory]
+    Cargo --> Crew[Crew Data]
+    Crew --> Loc[World Location]
+    Loc --> Save[(Save to Region/NBT)]
+    Save -.on chunk load.-> Load[Load Ship]
+    Load --> Reconstruct[Reconstruct ShipEntity]
+    </div>
+  </div>
+</section>
+
+<!-- 13 -->
+<section class="entry" id="s13" data-title="GUI Flowchart">
+  <div class="entry-head"><span class="entry-num">13</span><h2>GUI Flowchart</h2></div>
+  <p class="entry-kicker">The captain's dashboard</p>
+  <p class="entry-body">Every dashboard tab &mdash; hull, sails, anchor, cargo, crew, repair, log &mdash; returns to the same hub, so the captain is never more than one click from the full picture.</p>
+  <div class="panel">
+    <div class="cap">Fig. 13 — Dashboard hub</div>
+    <div class="mermaid">
+flowchart TD
+    Enter[Captain Enters Helm] --> Dash[Ship Dashboard]
+    Dash --> Hull2[Hull Status]
+    Dash --> SailC[Sail Controls]
+    Dash --> Anchor2[Anchor]
+    Dash --> Cargo2[Cargo]
+    Dash --> Crew2[Crew]
+    Dash --> Repair[Repair]
+    Dash --> Log[Ship Log]
+    Dash --> Exit[Exit]
+    Hull2 --> Dash
+    SailC --> Dash
+    Anchor2 --> Dash
+    Cargo2 --> Dash
+    Crew2 --> Dash
+    Repair --> Dash
+    Log --> Dash
+    </div>
+  </div>
+</section>
+
+<!-- 14 -->
+<section class="entry" id="s14" data-title="Dependency Graph">
+  <div class="entry-head"><span class="entry-num">14</span><h2>Development Dependency Graph</h2></div>
+  <p class="entry-kicker">What must exist before what</p>
+  <p class="entry-body">Movement gates scanning, validation, and multiplayer alike. Launching gates both the GUI and cannon branches, which converge again at performance and polish before release.</p>
+  <div class="panel">
+    <div class="cap">Fig. 14 — Build order</div>
+    <div class="mermaid">
+flowchart TD
+    Setup[Project Setup + Fabric] --> Entity[Ship Entity Base]
+    Entity --> Movement[Basic Movement]
+    Movement --> Scanner2[Scanner]
+    Scanner2 --> Validation2[Validation]
+    Validation2 --> Launching[Launching]
+    Launching --> GUI2[GUI/Dashboard]
+    GUI2 --> Inventory2[Inventory]
+    Launching --> Cannons2[Cannons]
+    Cannons2 --> DamageDep[Damage System]
+    DamageDep --> Flooding2[Flooding/Repairs]
+    Movement --> Multiplayer2[Multiplayer/Networking]
+    Flooding2 --> Multiplayer2
+    Movement --> Wind2[Wind/Sailing]
+    Multiplayer2 --> Perf[Performance Optimization]
+    Wind2 --> Perf
+    Perf --> Polish2[Polish: Sound/FX/Anim]
+    Polish2 --> Release[1.0 Stable Release]
+    </div>
+  </div>
+</section>
+
+<!-- 15 -->
+<section class="entry" id="s15" data-title="Version Roadmap">
+  <div class="entry-head"><span class="entry-num">15</span><h2>Version Roadmap</h2></div>
+  <p class="entry-kicker">The route to 1.0</p>
+  <p class="entry-body">Ten ports of call from bare Fabric setup to a stable release on CurseForge and Modrinth.</p>
+  <div class="route">
+    <div class="port"><div class="v">v0.1</div><div class="f">Setup + Entity + Movement</div><div class="d">Project setup, Fabric loom, base ShipEntity, basic movement</div></div>
+    <div class="port"><div class="v">v0.2</div><div class="f">Scanner + Validation + Launch</div><div class="d">Scanner, launching, validation engine</div></div>
+    <div class="port"><div class="v">v0.3</div><div class="f">GUI + Dashboard + Inventory</div><div class="d">GUI, ship dashboard, inventory</div></div>
+    <div class="port"><div class="v">v0.4</div><div class="f">Cannons + Smoke + Reload</div><div class="d">Cannons, cannonballs, smoke, reload logic</div></div>
+    <div class="port"><div class="v">v0.5</div><div class="f">Damage + Flooding + Repairs</div><div class="d">Damage system, flooding, repairs</div></div>
+    <div class="port"><div class="v">v0.6</div><div class="f">Multiplayer + Sync</div><div class="d">Multiplayer, networking, state sync</div></div>
+    <div class="port"><div class="v">v0.7</div><div class="f">Wind + Collision</div><div class="d">Wind, sailing improvements, collision refinement</div></div>
+    <div class="port"><div class="v">v0.8</div><div class="f">Performance Optimization</div><div class="d">Mesh cache, collision optimization</div></div>
+    <div class="port"><div class="v">v0.9</div><div class="f">Polish</div><div class="d">Sounds, particles, animations</div></div>
+    <div class="port current"><div class="v">v1.0</div><div class="f">Stable Release</div><div class="d">Stable release on CurseForge &amp; Modrinth</div></div>
+  </div>
+</section>
+
+<!-- 16 -->
+<section class="entry" id="s16" data-title="Post-Release">
+  <div class="entry-head"><span class="entry-num">16</span><h2>Post-Release Roadmap</h2></div>
+  <p class="entry-kicker">Beyond 1.0</p>
+  <p class="entry-body">From merchant ships and pirates through fleet battles and trading, culminating in a 2.0 ocean expansion with weather, storms, whirlpools, sea monsters, and dynamic oceans.</p>
+  <div class="postroute">
+    <span class="stop">1.0 Stable</span><span class="arrow">→</span>
+    <span class="stop">1.1 Merchant Ships</span><span class="arrow">→</span>
+    <span class="stop">1.2 Pirates</span><span class="arrow">→</span>
+    <span class="stop">1.3 Crew AI</span><span class="arrow">→</span>
+    <span class="stop">1.4 Fleet Battles</span><span class="arrow">→</span>
+    <span class="stop">1.5 Trading System</span><span class="arrow">→</span>
+    <span class="stop">2.0 Ocean Expansion</span>
+  </div>
+  <p class="entry-body" style="margin-top:18px;">2.0 branches into weather, storms, whirlpools, sea monsters, and fully dynamic oceans.</p>
+</section>
+
+<!-- 17 / closing -->
+<section class="closing" id="s17" data-title="Design Philosophy">
+  <div class="entry-num" style="display:block; text-align:center; margin-bottom:18px;">17 — DESIGN PHILOSOPHY</div>
+  <blockquote>&ldquo;Build your own medieval warship and command it.&rdquo;</blockquote>
+  <p>Every system above serves one goal: preserve the vanilla+ feel &mdash; no floating menus dictating ship shape, no forced templates. The scanner reads whatever the player builds, validates it against physical logic, and only then promotes it to a living entity. Damage and sinking stay readable through block-level cues, not abstract health bars alone, so combat still feels like Minecraft.</p>
+</section>
+
+<footer>FLEETCRAFT DEV LOG &middot; COMPILED FROM 17 ENTRIES &middot; NEXT PORT: v0.1</footer>
+
+<script>
+  mermaid.initialize({
+    startOnLoad:true,
+    theme:'base',
+    themeVariables:{
+      background:'#123259',
+      primaryColor:'#0A1F33',
+      primaryTextColor:'#EFE7D2',
+      primaryBorderColor:'#C6963B',
+      lineColor:'#C6963B',
+      secondaryColor:'#9a4430',
+      tertiaryColor:'#3d8079',
+      fontFamily:'JetBrains Mono, monospace',
+      fontSize:'13px',
+      edgeLabelBackground:'#123259',
+      clusterBkg:'#0A1F33',
+      clusterBorder:'#8f6b26'
+    },
+    flowchart:{ curve:'basis', htmlLabels:true },
+    securityLevel:'loose'
+  });
+
+  // side log-nav: build dots from sections
+  const sections = document.querySelectorAll('section.entry, section.closing');
+  const nav = document.getElementById('lognav');
+  sections.forEach(sec => {
+    const btn = document.createElement('button');
+    btn.dataset.target = sec.id;
+    const lbl = document.createElement('span');
+    lbl.className = 'lbl';
+    lbl.textContent = sec.dataset.title || sec.id;
+    btn.appendChild(lbl);
+    btn.addEventListener('click', () => sec.scrollIntoView({behavior:'smooth'}));
+    nav.appendChild(btn);
+  });
+  const dots = nav.querySelectorAll('button');
+  const io = new IntersectionObserver((entries)=>{
+    entries.forEach(en=>{
+      if(en.isIntersecting){
+        dots.forEach(d=>d.classList.remove('active'));
+        const match = nav.querySelector(`button[data-target="${en.target.id}"]`);
+        if(match) match.classList.add('active');
+      }
+    });
+  }, { rootMargin:'-45% 0px -45% 0px', threshold:0 });
+  sections.forEach(s=>io.observe(s));
+</script>
+</body>
+</html>
