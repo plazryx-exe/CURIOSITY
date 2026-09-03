@@ -1,0 +1,1190 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>VEYA — Modular Intelligence & Computing Ecosystem</title>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=JetBrains+Mono:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#050A18;--bg1:#0D1530;--bg2:#1A2744;--bg3:#213154;
+  --blue:#4F9EFF;--blue-dim:#1E3A5F;--violet:#7C5CFF;--violet-dim:#2D1F5E;
+  --emerald:#00D4AA;--emerald-dim:#003D33;
+  --amber:#FFB347;--red:#FF5A65;--muted:#8899BB;--muted2:#4A5A78;
+  --text:#E8EEFF;--text2:#A0B0D0;--text3:#607090;
+  --border:#1E2E50;--border2:#2A3D65;
+  --radius:8px;--nav-w:240px;
+  --sim:#FFB347;
+}
+html,body{height:100%;overflow:hidden}
+body{font-family:'Space Grotesk',sans-serif;background:var(--bg);color:var(--text);font-size:14px;line-height:1.5}
+
+/* Layout */
+#app{display:flex;height:100vh}
+#sidebar{width:var(--nav-w);flex-shrink:0;background:var(--bg1);border-right:1px solid var(--border);display:flex;flex-direction:column;overflow:hidden}
+#main{flex:1;overflow-y:auto;overflow-x:hidden}
+
+/* Sidebar */
+.sidebar-header{padding:20px 20px 16px;border-bottom:1px solid var(--border)}
+.logo{font-size:18px;font-weight:700;letter-spacing:2px;color:var(--blue)}
+.logo span{color:var(--violet)}
+.version-badge{font-family:'JetBrains Mono',monospace;font-size:10px;color:var(--muted);background:var(--bg2);padding:2px 6px;border-radius:3px;margin-top:4px;display:inline-block}
+.sim-badge{font-family:'JetBrains Mono',monospace;font-size:9px;color:var(--amber);background:rgba(255,179,71,.12);border:1px solid rgba(255,179,71,.3);padding:2px 8px;border-radius:3px;margin-top:6px;display:inline-block}
+
+nav{flex:1;overflow-y:auto;padding:8px 0}
+nav::-webkit-scrollbar{width:3px}
+nav::-webkit-scrollbar-thumb{background:var(--border2)}
+.nav-item{display:flex;align-items:center;gap:10px;padding:9px 20px;cursor:pointer;transition:all .15s;color:var(--text2);font-size:13px;font-weight:400;border-left:2px solid transparent}
+.nav-item:hover{background:var(--bg2);color:var(--text)}
+.nav-item.active{background:rgba(79,158,255,.08);color:var(--blue);border-left-color:var(--blue)}
+.nav-icon{width:16px;height:16px;opacity:.7;flex-shrink:0}
+
+/* Pages */
+.page{display:none;padding:32px;min-height:100vh}
+.page.active{display:block}
+.page-header{margin-bottom:28px}
+.page-title{font-size:22px;font-weight:600;color:var(--text)}
+.page-sub{font-size:13px;color:var(--muted);margin-top:4px}
+.sim-label{display:inline-block;font-family:'JetBrains Mono',monospace;font-size:10px;color:var(--amber);background:rgba(255,179,71,.1);border:1px solid rgba(255,179,71,.25);padding:2px 8px;border-radius:3px;margin-top:8px}
+
+/* Cards */
+.card{background:var(--bg1);border:1px solid var(--border);border-radius:12px;padding:20px}
+.card-sm{padding:14px 16px}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+.grid3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px}
+.grid4{display:grid;grid-template-columns:repeat(4,1fr);gap:12px}
+
+/* Status dots */
+.dot{width:7px;height:7px;border-radius:50%;display:inline-block;flex-shrink:0}
+.dot-green{background:var(--emerald);box-shadow:0 0 6px var(--emerald)}
+.dot-blue{background:var(--blue);box-shadow:0 0 6px var(--blue)}
+.dot-amber{background:var(--amber)}
+.dot-red{background:var(--red)}
+.dot-gray{background:var(--muted2)}
+
+/* Tags */
+.tag{font-size:11px;padding:2px 8px;border-radius:4px;font-family:'JetBrains Mono',monospace;font-weight:400}
+.tag-blue{background:rgba(79,158,255,.15);color:var(--blue)}
+.tag-violet{background:rgba(124,92,255,.15);color:var(--violet)}
+.tag-emerald{background:rgba(0,212,170,.15);color:var(--emerald)}
+.tag-amber{background:rgba(255,179,71,.15);color:var(--amber)}
+.tag-red{background:rgba(255,90,101,.15);color:var(--red)}
+.tag-muted{background:var(--bg2);color:var(--muted)}
+
+/* Buttons */
+.btn{font-family:'Space Grotesk',sans-serif;font-size:12px;font-weight:500;padding:7px 14px;border-radius:var(--radius);border:1px solid var(--border2);background:var(--bg2);color:var(--text2);cursor:pointer;transition:all .15s;letter-spacing:.3px}
+.btn:hover{background:var(--bg3);color:var(--text);border-color:var(--muted2)}
+.btn-blue{background:rgba(79,158,255,.15);border-color:rgba(79,158,255,.4);color:var(--blue)}
+.btn-blue:hover{background:rgba(79,158,255,.25);color:var(--text)}
+.btn-emerald{background:rgba(0,212,170,.12);border-color:rgba(0,212,170,.35);color:var(--emerald)}
+.btn-emerald:hover{background:rgba(0,212,170,.22)}
+.btn-red{background:rgba(255,90,101,.12);border-color:rgba(255,90,101,.35);color:var(--red)}
+.btn-danger:hover{background:rgba(255,90,101,.22)}
+
+/* Dividers */
+.divider{border:none;border-top:1px solid var(--border);margin:20px 0}
+
+/* Section titles */
+.section-title{font-size:12px;font-weight:600;letter-spacing:1px;color:var(--muted);text-transform:uppercase;margin-bottom:12px}
+
+/* Flow diagram */
+.flow-row{display:flex;align-items:center;gap:0}
+.flow-node{background:var(--bg2);border:1px solid var(--border2);border-radius:8px;padding:10px 16px;font-size:13px;font-weight:500;cursor:pointer;transition:all .2s;white-space:nowrap}
+.flow-node:hover,.flow-node.lit{background:rgba(79,158,255,.12);border-color:var(--blue);color:var(--blue)}
+.flow-arrow{color:var(--muted2);margin:0 8px;font-size:16px;flex-shrink:0}
+
+/* Activity feed */
+.feed-item{display:flex;align-items:center;gap:10px;padding:8px 12px;border-radius:6px;font-family:'JetBrains Mono',monospace;font-size:12px;animation:fadeIn .4s ease}
+@keyframes fadeIn{from{opacity:0;transform:translateY(-4px)}to{opacity:1;transform:translateY(0)}}
+.feed-item .fi-time{color:var(--muted);min-width:50px}
+.feed-item .fi-event{color:var(--blue)}
+.feed-item .fi-msg{color:var(--text2);flex:1}
+
+/* Model cards */
+.model-card{background:var(--bg1);border:1px solid var(--border);border-radius:12px;padding:16px;cursor:pointer;transition:all .2s;position:relative}
+.model-card:hover,.model-card.selected{border-color:var(--blue);background:rgba(79,158,255,.05)}
+.model-card.selected::after{content:'SELECTED';position:absolute;top:10px;right:10px;font-size:9px;font-family:'JetBrains Mono',monospace;color:var(--emerald);background:rgba(0,212,170,.12);border:1px solid rgba(0,212,170,.3);padding:2px 6px;border-radius:3px}
+.model-name{font-size:15px;font-weight:600;margin-bottom:6px}
+.latency-bar{height:3px;background:var(--bg3);border-radius:2px;margin:10px 0 4px}
+.latency-fill{height:100%;border-radius:2px;background:var(--emerald);transition:width .5s}
+
+/* Agent nodes */
+.agent-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
+.agent-card{background:var(--bg1);border:1px solid var(--border);border-radius:12px;padding:16px;cursor:pointer;transition:all .2s;text-align:center}
+.agent-card:hover{border-color:var(--violet);background:rgba(124,92,255,.06)}
+.agent-icon{width:40px;height:40px;border-radius:10px;display:flex;align-items:center;justify-content:center;margin:0 auto 10px;font-size:20px}
+
+/* Security events */
+.sec-event{display:flex;align-items:flex-start;gap:12px;padding:12px;border-radius:8px;background:var(--bg2);border:1px solid var(--border);margin-bottom:8px}
+.sec-event-icon{width:32px;height:32px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:14px;flex-shrink:0}
+
+/* Plugin cards */
+.plugin-card{background:var(--bg1);border:1px solid var(--border);border-radius:10px;padding:14px;transition:all .2s}
+.plugin-card:hover{border-color:var(--border2)}
+.plugin-status{font-size:10px;font-family:'JetBrains Mono',monospace}
+
+/* Hardware */
+.hw-card{background:var(--bg2);border:1px solid var(--border);border-radius:8px;padding:12px;text-align:center;cursor:pointer;transition:all .2s}
+.hw-card:hover{border-color:var(--blue);background:rgba(79,158,255,.06)}
+.hw-icon{font-size:24px;margin-bottom:6px}
+.hw-name{font-size:12px;font-weight:500;color:var(--text2)}
+
+/* Architecture map */
+.arch-node{display:flex;align-items:center;justify-content:center;padding:10px 20px;border-radius:8px;font-weight:500;font-size:13px;cursor:pointer;transition:all .2s;text-align:center;border:1px solid}
+.arch-connector{display:flex;align-items:center;justify-content:center;color:var(--muted2);font-size:12px;padding:4px 0}
+
+/* Mode toggle */
+.mode-tab{padding:10px 20px;border-radius:8px;cursor:pointer;transition:all .2s;border:1px solid var(--border);background:var(--bg1);font-size:13px;font-weight:500}
+.mode-tab.active{border-color:var(--blue);background:rgba(79,158,255,.1);color:var(--blue)}
+
+/* Wearable */
+.watch-face{width:200px;height:240px;background:var(--bg1);border:2px solid var(--border2);border-radius:40px;padding:20px;display:flex;flex-direction:column;align-items:center;justify-content:center;position:relative;margin:0 auto}
+.watch-btn{padding:6px 14px;border-radius:20px;background:var(--bg2);border:1px solid var(--border2);font-size:11px;cursor:pointer;transition:all .15s;color:var(--text2)}
+.watch-btn:hover{background:var(--bg3);border-color:var(--blue);color:var(--blue)}
+
+/* Event bus */
+.event-item{display:flex;align-items:center;gap:10px;padding:8px 12px;border-radius:6px;background:var(--bg2);border:1px solid var(--border);margin-bottom:6px;cursor:pointer;transition:all .2s;font-family:'JetBrains Mono',monospace;font-size:12px}
+.event-item:hover{border-color:var(--border2);background:var(--bg3)}
+
+/* SDK */
+.sdk-api{background:var(--bg2);border:1px solid var(--border);border-radius:10px;padding:14px;margin-bottom:10px;cursor:pointer;transition:all .2s}
+.sdk-api:hover{border-color:var(--violet);background:rgba(124,92,255,.05)}
+.sdk-code{font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--emerald);background:var(--bg);padding:10px;border-radius:6px;margin-top:10px;display:none}
+.sdk-api.open .sdk-code{display:block}
+
+/* Panel overlay */
+.panel-overlay{position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(5,10,24,.7);z-index:100;display:none;align-items:center;justify-content:center}
+.panel-overlay.show{display:flex}
+.info-panel{background:var(--bg1);border:1px solid var(--border2);border-radius:16px;padding:28px;max-width:440px;width:90%;max-height:80vh;overflow-y:auto}
+.panel-close{float:right;background:none;border:none;color:var(--muted);cursor:pointer;font-size:18px;margin-top:-4px}
+.panel-close:hover{color:var(--text)}
+
+/* Diagnostics */
+.diag-bar{height:6px;background:var(--bg3);border-radius:3px;overflow:hidden;margin-top:6px}
+.diag-fill{height:100%;border-radius:3px;transition:width 1s}
+
+/* Progress animation */
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.5}}
+.pulse{animation:pulse 2s infinite}
+
+/* Scrollbar */
+#main::-webkit-scrollbar{width:4px}
+#main::-webkit-scrollbar-thumb{background:var(--border2);border-radius:2px}
+
+/* Responsive */
+@media(max-width:768px){
+  :root{--nav-w:200px}
+  .grid3,.grid4,.agent-grid{grid-template-columns:1fr 1fr}
+  .grid2{grid-template-columns:1fr}
+}
+@media(max-width:560px){
+  :root{--nav-w:0px}
+  #sidebar{display:none}
+  .page{padding:16px}
+}
+</style>
+</head>
+<body>
+<div id="app">
+<!-- SIDEBAR -->
+<div id="sidebar">
+  <div class="sidebar-header">
+    <div class="logo">VEY<span>A</span></div>
+    <div class="version-badge">ZEMOxVEY v0.1-concept</div>
+    <div class="sim-badge">⚠ VISUAL PROTOTYPE</div>
+  </div>
+  <nav id="sidenav"></nav>
+</div>
+
+<!-- MAIN -->
+<div id="main">
+
+<!-- DASHBOARD -->
+<div class="page active" id="p-dashboard">
+  <div class="page-header">
+    <div class="page-title">Dashboard</div>
+    <div class="page-sub">VEYA Modular Intelligence Overview</div>
+    <div class="sim-label">INTERACTIVE CONCEPT PROTOTYPE — VISUAL SIMULATION</div>
+  </div>
+
+  <!-- Pipeline flow -->
+  <div class="card" style="margin-bottom:16px">
+    <div class="section-title">Processing Pipeline</div>
+    <div style="overflow-x:auto;padding-bottom:4px">
+      <div class="flow-row" id="pipeline-flow"></div>
+    </div>
+    <div id="pipeline-info" style="margin-top:14px;padding:12px;background:var(--bg2);border-radius:8px;font-size:13px;color:var(--text2);min-height:44px;transition:all .2s;display:none"></div>
+  </div>
+
+  <!-- Stats row -->
+  <div class="grid4" style="margin-bottom:16px">
+    <div class="card card-sm">
+      <div style="font-size:11px;color:var(--muted);margin-bottom:4px">Active Agents</div>
+      <div style="font-size:22px;font-weight:600;color:var(--blue)">6</div>
+      <div style="font-size:11px;color:var(--emerald)">↑ All running</div>
+    </div>
+    <div class="card card-sm">
+      <div style="font-size:11px;color:var(--muted);margin-bottom:4px">Models Available</div>
+      <div style="font-size:22px;font-weight:600;color:var(--violet)">5</div>
+      <div style="font-size:11px;color:var(--text3)">3 cloud, 1 local, 1 hybrid</div>
+    </div>
+    <div class="card card-sm">
+      <div style="font-size:11px;color:var(--muted);margin-bottom:4px">Plugins Loaded</div>
+      <div style="font-size:22px;font-weight:600;color:var(--emerald)">8</div>
+      <div style="font-size:11px;color:var(--text3)">Simulated state</div>
+    </div>
+    <div class="card card-sm">
+      <div style="font-size:11px;color:var(--muted);margin-bottom:4px">Security Status</div>
+      <div style="font-size:22px;font-weight:600;color:var(--emerald)">SAFE</div>
+      <div style="font-size:11px;color:var(--emerald)">All checks passing</div>
+    </div>
+  </div>
+
+  <!-- Activity feed -->
+  <div class="card">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
+      <div class="section-title" style="margin-bottom:0">Simulated Activity</div>
+      <div style="display:flex;align-items:center;gap:8px">
+        <span class="dot dot-green pulse"></span>
+        <span style="font-size:11px;color:var(--muted);font-family:'JetBrains Mono',monospace">SIMULATED</span>
+      </div>
+    </div>
+    <div id="activity-feed" style="max-height:240px;overflow-y:auto"></div>
+  </div>
+</div>
+
+<!-- AI MODELS -->
+<div class="page" id="p-models">
+  <div class="page-header">
+    <div class="page-title">AI Model Center</div>
+    <div class="page-sub">Multi-model routing and orchestration</div>
+    <div class="sim-label">VISUAL SIMULATION — No real API calls made</div>
+  </div>
+  <div class="grid3" id="model-cards" style="margin-bottom:20px"></div>
+
+  <div class="card" style="margin-bottom:16px">
+    <div class="section-title">AI Matchmaker — Task Routing</div>
+    <div style="display:flex;gap:10px;align-items:flex-end;flex-wrap:wrap">
+      <div style="flex:1;min-width:200px">
+        <label style="font-size:12px;color:var(--muted);display:block;margin-bottom:6px">Sample Task</label>
+        <select id="task-select" style="width:100%;background:var(--bg2);border:1px solid var(--border2);border-radius:8px;padding:8px 12px;color:var(--text);font-family:'Space Grotesk',sans-serif;font-size:13px">
+          <option>Debug this Python program</option>
+          <option>Summarize a research paper</option>
+          <option>Generate a creative story</option>
+          <option>Analyze sales data</option>
+          <option>Translate text to French</option>
+          <option>Answer a math problem</option>
+        </select>
+      </div>
+      <button class="btn btn-blue" onclick="runMatchmaker()">Route Task ↗</button>
+    </div>
+    <div id="matchmaker-result" style="margin-top:14px;display:none"></div>
+  </div>
+
+  <div class="card">
+    <div class="section-title">Compare Models (Simulated)</div>
+    <button class="btn btn-blue" onclick="toggleCompare()">Compare Models</button>
+    <div id="compare-panel" style="display:none;margin-top:16px"></div>
+  </div>
+</div>
+
+<!-- AGENTS -->
+<div class="page" id="p-agents">
+  <div class="page-header">
+    <div class="page-title">Agent System</div>
+    <div class="page-sub">Specialized AI agents with defined roles and permissions</div>
+    <div class="sim-label">SIMULATED AGENT NETWORK</div>
+  </div>
+  <div class="agent-grid" id="agent-grid" style="margin-bottom:20px"></div>
+  <div class="card">
+    <div class="section-title">Agent Communication</div>
+    <div style="font-size:13px;color:var(--text2);margin-bottom:12px">Agents collaborate through structured message passing. Click an agent above to inspect.</div>
+    <div style="display:flex;flex-wrap:wrap;gap:8px" id="agent-log"></div>
+  </div>
+</div>
+
+<!-- MEMORY -->
+<div class="page" id="p-memory">
+  <div class="page-header">
+    <div class="page-title">Memory & Context</div>
+    <div class="page-sub">How VEYA assembles and manages contextual state</div>
+    <div class="sim-label">DEMONSTRATION DATA — No real personal data processed</div>
+  </div>
+  <div class="grid2" style="margin-bottom:16px">
+    <div class="card">
+      <div class="section-title">Memory Layers</div>
+      <div id="memory-layers"></div>
+    </div>
+    <div class="card">
+      <div class="section-title">Context Assembly Engine</div>
+      <div id="context-flow"></div>
+    </div>
+  </div>
+  <div class="card" style="background:rgba(255,179,71,.04);border-color:rgba(255,179,71,.2)">
+    <div style="font-size:12px;color:var(--amber)">⚠ Demonstration data only — no real personal data is being processed in this prototype.</div>
+  </div>
+</div>
+
+<!-- CONTEXT -->
+<div class="page" id="p-context">
+  <div class="page-header">
+    <div class="page-title">Context Engine</div>
+    <div class="page-sub">How VEYA builds the right context for each task</div>
+    <div class="sim-label">VISUAL SIMULATION</div>
+  </div>
+  <div class="grid2">
+    <div class="card">
+      <div class="section-title">Context Sources</div>
+      <div id="context-sources"></div>
+    </div>
+    <div class="card">
+      <div class="section-title">Context Package Preview</div>
+      <pre style="font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--emerald);background:var(--bg);padding:12px;border-radius:8px;overflow:auto;max-height:280px;white-space:pre-wrap">{
+  "session_id": "sim_8f3a9c",
+  "task": "Debug Python program",
+  "user": { "id": "demo", "prefs": {} },
+  "memory_refs": [
+    "prev_coding_session",
+    "python_env_config"
+  ],
+  "tools_available": ["code_exec", "fs_read"],
+  "agent": "CodingAgent",
+  "model": "claude-sonnet",
+  "security_level": "standard",
+  "timestamp": "sim_2024-01-01T10:00:00Z"
+}</pre>
+    </div>
+  </div>
+</div>
+
+<!-- TOOLS -->
+<div class="page" id="p-tools">
+  <div class="page-header">
+    <div class="page-title">Tools</div>
+    <div class="page-sub">Native capabilities exposed to agents</div>
+    <div class="sim-label">CONCEPTUAL — Tools are design-stage definitions</div>
+  </div>
+  <div class="grid3" id="tools-grid"></div>
+</div>
+
+<!-- PLUGINS -->
+<div class="page" id="p-plugins">
+  <div class="page-header">
+    <div class="page-title">Plugin System</div>
+    <div class="page-sub">Extend VEYA's capabilities with modular plugins</div>
+    <div class="sim-label">VISUAL SIMULATION — No real plugins installed</div>
+  </div>
+  <div id="plugin-grid" style="display:grid;grid-template-columns:1fr 1fr;gap:14px"></div>
+</div>
+
+<!-- MODS -->
+<div class="page" id="p-mods">
+  <div class="page-header">
+    <div class="page-title">Mod System</div>
+    <div class="page-sub">Modify VEYA's existing behavior — distinct from plugins</div>
+    <div class="sim-label">CONCEPTUAL DESIGN</div>
+  </div>
+  <div class="card" style="margin-bottom:16px;background:rgba(124,92,255,.05);border-color:rgba(124,92,255,.25)">
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px">
+      <div>
+        <div style="font-size:12px;color:var(--muted);margin-bottom:6px">PLUGIN</div>
+        <div style="font-size:14px;font-weight:600;color:var(--blue)">Adds new capability</div>
+        <div style="font-size:12px;color:var(--text2);margin-top:4px">Web Plugin, File-System Plugin, Database Plugin — things VEYA couldn't do before</div>
+      </div>
+      <div>
+        <div style="font-size:12px;color:var(--muted);margin-bottom:6px">MOD</div>
+        <div style="font-size:14px;font-weight:600;color:var(--violet)">Changes existing behavior</div>
+        <div style="font-size:12px;color:var(--text2);margin-top:4px">UI Mod, Personality Mod, Workflow Mod — reshapes how VEYA already works</div>
+      </div>
+    </div>
+  </div>
+  <div class="grid2" id="mods-grid"></div>
+</div>
+
+<!-- HARDWARE -->
+<div class="page" id="p-hardware">
+  <div class="page-header">
+    <div class="page-title">Hardware Center</div>
+    <div class="page-sub">VEYA's conceptual hardware abstraction layer</div>
+    <div class="sim-label">CONCEPTUAL HARDWARE VISUALIZATION — Not a claim of built hardware</div>
+  </div>
+  <div class="card" style="margin-bottom:16px">
+    <div class="section-title">Hardware Abstraction Stack</div>
+    <div id="hw-stack"></div>
+  </div>
+  <div class="section-title">Hardware Components</div>
+  <div style="display:grid;grid-template-columns:repeat(5,1fr);gap:10px;margin-bottom:20px" id="hw-grid"></div>
+</div>
+
+<!-- SECURITY -->
+<div class="page" id="p-security">
+  <div class="page-header">
+    <div class="page-title">Security Center</div>
+    <div class="page-sub">VEYA's layered permission and safety architecture</div>
+    <div class="sim-label">SIMULATED SECURITY EVENTS</div>
+  </div>
+  <div class="grid2" style="margin-bottom:16px">
+    <div class="card">
+      <div class="section-title">Security Layers</div>
+      <div id="sec-layers"></div>
+    </div>
+    <div class="card">
+      <div class="section-title">Simulated Event Timeline</div>
+      <div id="sec-timeline"></div>
+      <button class="btn" style="margin-top:12px;width:100%" onclick="runSecEvent()">Simulate Security Event</button>
+    </div>
+  </div>
+  <div class="card" style="background:rgba(79,158,255,.04);border-color:rgba(79,158,255,.2)">
+    <div style="font-size:14px;font-weight:600;color:var(--text);margin-bottom:6px">"Intelligence does not automatically mean authority."</div>
+    <div style="font-size:13px;color:var(--text2)">Every action VEYA takes — regardless of how intelligent the reasoning — must pass through explicit permission gates before execution.</div>
+  </div>
+</div>
+
+<!-- EVENTS -->
+<div class="page" id="p-events">
+  <div class="page-header">
+    <div class="page-title">Event Bus</div>
+    <div class="page-sub">Animated system event stream connecting all VEYA components</div>
+    <div class="sim-label">SIMULATED EVENT STREAM</div>
+  </div>
+  <div style="display:flex;gap:10px;margin-bottom:16px">
+    <button class="btn btn-blue" onclick="startEvents()">▶ Start Stream</button>
+    <button class="btn" onclick="stopEvents()">■ Stop</button>
+    <button class="btn" onclick="clearEvents()">✕ Clear</button>
+  </div>
+  <div id="event-bus" style="max-height:400px;overflow-y:auto"></div>
+  <div id="event-detail" style="margin-top:14px;display:none"></div>
+</div>
+
+<!-- DIAGNOSTICS -->
+<div class="page" id="p-diagnostics">
+  <div class="page-header">
+    <div class="page-title">Diagnostics</div>
+    <div class="page-sub">System health, activity, and performance monitoring</div>
+    <div class="sim-label">SIMULATED METRICS</div>
+  </div>
+  <div class="grid4" style="margin-bottom:16px" id="diag-stats"></div>
+  <div class="grid2">
+    <div class="card">
+      <div class="section-title">Performance Metrics</div>
+      <div id="diag-perf"></div>
+    </div>
+    <div class="card">
+      <div class="section-title">System Log</div>
+      <div id="diag-log" style="max-height:220px;overflow-y:auto;font-family:'JetBrains Mono',monospace;font-size:11px"></div>
+      <button class="btn" style="margin-top:12px" onclick="clearLog()">Clear Logs</button>
+    </div>
+  </div>
+</div>
+
+<!-- SDK -->
+<div class="page" id="p-sdk">
+  <div class="page-header">
+    <div class="page-title">VEYA SDK</div>
+    <div class="page-sub">Developer ecosystem — API surface for extending VEYA</div>
+    <div class="sim-label">CONCEPTUAL API DESIGN — Not a production SDK</div>
+  </div>
+  <div class="card" style="margin-bottom:16px">
+    <div class="section-title">Developer Ecosystem Flow</div>
+    <div id="sdk-ecosystem"></div>
+  </div>
+  <div id="sdk-apis"></div>
+</div>
+
+<!-- SETTINGS -->
+<div class="page" id="p-settings">
+  <div class="page-header">
+    <div class="page-title">Settings</div>
+    <div class="page-sub">VEYA operating mode and preferences</div>
+    <div class="sim-label">VISUAL MODE SWITCHER</div>
+  </div>
+  <div class="card" style="margin-bottom:16px">
+    <div class="section-title">Operating Mode</div>
+    <div style="display:flex;gap:10px;margin-bottom:16px" id="mode-tabs"></div>
+    <div id="mode-detail"></div>
+  </div>
+  <div class="card">
+    <div class="section-title">Trade-off Matrix</div>
+    <div id="mode-matrix"></div>
+  </div>
+</div>
+
+</div><!-- end #main -->
+</div><!-- end #app -->
+
+<!-- INFO PANEL OVERLAY -->
+<div class="panel-overlay" id="overlay" onclick="closePanel(event)">
+  <div class="info-panel" id="info-panel">
+    <button class="panel-close" onclick="closeOverlay()">✕</button>
+    <div id="panel-content"></div>
+  </div>
+</div>
+
+<script>
+// ─────────────────────────────────────────────
+// NAV
+// ─────────────────────────────────────────────
+const navItems=[
+  {id:'dashboard',label:'Dashboard',icon:'⬡'},
+  {id:'models',label:'AI Models',icon:'◈'},
+  {id:'agents',label:'Agents',icon:'◉'},
+  {id:'memory',label:'Memory',icon:'▦'},
+  {id:'context',label:'Context',icon:'◎'},
+  {id:'tools',label:'Tools',icon:'⟁'},
+  {id:'plugins',label:'Plugins',icon:'⊕'},
+  {id:'mods',label:'Mods',icon:'⊗'},
+  {id:'hardware',label:'Hardware',icon:'⬡'},
+  {id:'security',label:'Security',icon:'⬠'},
+  {id:'events',label:'Events',icon:'⚡'},
+  {id:'diagnostics',label:'Diagnostics',icon:'▣'},
+  {id:'sdk',label:'SDK',icon:'⟨⟩'},
+  {id:'settings',label:'Settings',icon:'⚙'},
+];
+const sidenav=document.getElementById('sidenav');
+navItems.forEach(n=>{
+  const el=document.createElement('div');
+  el.className='nav-item'+(n.id==='dashboard'?' active':'');
+  el.dataset.page=n.id;
+  el.innerHTML=`<span style="font-size:14px;width:18px;text-align:center">${n.icon}</span><span>${n.label}</span>`;
+  el.onclick=()=>navigate(n.id);
+  sidenav.appendChild(el);
+});
+
+function navigate(id){
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));
+  document.getElementById('p-'+id).classList.add('active');
+  document.querySelector(`.nav-item[data-page="${id}"]`).classList.add('active');
+  document.getElementById('main').scrollTop=0;
+}
+
+// ─────────────────────────────────────────────
+// PANEL OVERLAY
+// ─────────────────────────────────────────────
+function showPanel(title,body){
+  document.getElementById('panel-content').innerHTML=`<h3 style="margin-bottom:12px;font-size:16px">${title}</h3>${body}`;
+  document.getElementById('overlay').classList.add('show');
+}
+function closeOverlay(){document.getElementById('overlay').classList.remove('show')}
+function closePanel(e){if(e.target===document.getElementById('overlay'))closeOverlay()}
+
+// ─────────────────────────────────────────────
+// DASHBOARD
+// ─────────────────────────────────────────────
+const pipelineNodes=[
+  {id:'input',label:'Input',info:'Voice, text, or file input is received and normalized into a structured representation.'},
+  {id:'context',label:'Context',info:'Relevant memory, user preferences, and available tools are assembled into a context package.'},
+  {id:'reasoning',label:'Reasoning',info:'VEYA analyzes the task type, complexity, and constraints to form a reasoning plan.'},
+  {id:'selection',label:'Agent Selection',info:'VEYA determines which specialized agent is most appropriate for the current task.'},
+  {id:'execution',label:'Execution',info:'The selected agent runs the task using allowed tools, passing through security checks.'},
+  {id:'verification',label:'Verification',info:'The output is validated against quality, safety, and user expectation criteria.'},
+  {id:'output',label:'Output',info:'Final response is formatted and delivered to the user interface or target system.'},
+];
+const pf=document.getElementById('pipeline-flow');
+pipelineNodes.forEach((n,i)=>{
+  const node=document.createElement('div');
+  node.className='flow-node';
+  node.textContent=n.label;
+  node.onclick=()=>{
+    document.querySelectorAll('.flow-node').forEach(x=>x.classList.remove('lit'));
+    node.classList.add('lit');
+    const inf=document.getElementById('pipeline-info');
+    inf.textContent=n.info;
+    inf.style.display='block';
+  };
+  pf.appendChild(node);
+  if(i<pipelineNodes.length-1){
+    const arr=document.createElement('div');
+    arr.className='flow-arrow';arr.textContent='→';
+    pf.appendChild(arr);
+  }
+});
+
+const activityMessages=[
+  {e:'VOICE_INPUT',m:'Voice input received and transcribed'},
+  {e:'CONTEXT_BUILT',m:'Context assembled from memory + tools'},
+  {e:'AGENT_SELECTED',m:'Research Agent selected for task'},
+  {e:'MODEL_ROUTED',m:'Claude Sonnet routing confirmed'},
+  {e:'PLUGIN_CALLED',m:'Web Plugin invoked for search'},
+  {e:'PERM_CHECK',m:'Permission gate: filesystem access requested'},
+  {e:'PERM_GRANTED',m:'Permission granted — user approved'},
+  {e:'VERIFY_DONE',m:'Output verified and sanitized'},
+  {e:'RESPONSE_OUT',m:'Response delivered to user interface'},
+];
+let feedIdx=0,feedTimer;
+function addFeedItem(){
+  const feed=document.getElementById('activity-feed');
+  const msg=activityMessages[feedIdx%activityMessages.length];
+  const now=new Date();
+  const t=`${String(now.getHours()).padStart(2,'0')}:${String(now.getMinutes()).padStart(2,'0')}:${String(now.getSeconds()).padStart(2,'0')}`;
+  const div=document.createElement('div');
+  div.className='feed-item';
+  div.innerHTML=`<span class="fi-time">${t}</span><span class="fi-event">[${msg.e}]</span><span class="fi-msg">${msg.m}</span>`;
+  feed.insertBefore(div,feed.firstChild);
+  if(feed.children.length>30)feed.removeChild(feed.lastChild);
+  feedIdx++;
+}
+feedTimer=setInterval(addFeedItem,2200);
+addFeedItem();addFeedItem();addFeedItem();
+
+// ─────────────────────────────────────────────
+// MODELS
+// ─────────────────────────────────────────────
+const models=[
+  {name:'ChatGPT',org:'OpenAI',status:'online',tags:['General','Creative','Broad'],latency:42,latencyPct:65,color:'#10b981',routing:'Strong for conversational and creative tasks'},
+  {name:'Claude',org:'Anthropic',status:'online',tags:['Reasoning','Safety','Long-context'],latency:38,latencyPct:58,color:'var(--amber)',routing:'Preferred for analysis, coding, and nuanced reasoning'},
+  {name:'Gemini',org:'Google',status:'online',tags:['Multimodal','Search','Fast'],latency:29,latencyPct:44,color:'var(--blue)',routing:'Best for multimodal and search-grounded tasks'},
+  {name:'DeepSeek',org:'DeepSeek AI',status:'online',tags:['Coding','Math','Efficient'],latency:55,latencyPct:82,color:'var(--violet)',routing:'Strong for code generation and mathematical reasoning'},
+  {name:'Local Model',org:'On-device',status:'ready',tags:['Private','Offline','Fast'],latency:18,latencyPct:28,color:'var(--emerald)',routing:'Best for privacy-sensitive tasks; no data leaves device'},
+];
+let selectedModel='Claude';
+const mc=document.getElementById('model-cards');
+function renderModels(){
+  mc.innerHTML='';
+  models.forEach(m=>{
+    const card=document.createElement('div');
+    card.className='model-card'+(m.name===selectedModel?' selected':'');
+    card.onclick=()=>{selectedModel=m.name;renderModels()};
+    card.innerHTML=`
+      <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px">
+        <span class="dot ${m.status==='online'?'dot-green':'dot-amber'}"></span>
+        <span style="font-size:11px;color:var(--muted)">${m.org}</span>
+      </div>
+      <div class="model-name">${m.name}</div>
+      <div style="display:flex;flex-wrap:wrap;gap:4px;margin-bottom:10px">${m.tags.map(t=>`<span class="tag tag-muted">${t}</span>`).join('')}</div>
+      <div class="latency-bar"><div class="latency-fill" style="width:${m.latencyPct}%;background:${m.color}"></div></div>
+      <div style="font-size:11px;color:var(--muted);font-family:'JetBrains Mono',monospace">${m.latency}ms simulated latency</div>
+      <div style="font-size:12px;color:var(--text2);margin-top:8px">${m.routing}</div>
+    `;
+    mc.appendChild(card);
+  });
+}
+renderModels();
+
+const taskRoutes={
+  'Debug this Python program':{agent:'Coding Agent',model:'Claude',reason:'Structured reasoning for debugging; long context for code review'},
+  'Summarize a research paper':{agent:'Research Agent',model:'Claude',reason:'Long-context comprehension and analytical summarization'},
+  'Generate a creative story':{agent:'Planner Agent',model:'ChatGPT',reason:'High creativity and narrative generation capability'},
+  'Analyze sales data':{agent:'Research Agent',model:'Gemini',reason:'Structured data analysis with search grounding'},
+  'Translate text to French':{agent:'System Agent',model:'Local Model',reason:'Simple transformation — local model handles efficiently'},
+  'Answer a math problem':{agent:'Coding Agent',model:'DeepSeek',reason:'Mathematical reasoning is DeepSeek\'s specialty'},
+};
+function runMatchmaker(){
+  const task=document.getElementById('task-select').value;
+  const route=taskRoutes[task];
+  const div=document.getElementById('matchmaker-result');
+  div.style.display='block';
+  div.innerHTML=`
+    <div style="display:flex;gap:0;align-items:center;flex-wrap:wrap;margin-bottom:12px">
+      <div class="flow-node" style="border-color:var(--blue);color:var(--blue)">Task Detected</div><div class="flow-arrow">→</div>
+      <div class="flow-node" style="border-color:var(--violet);color:var(--violet)">${route.agent}</div><div class="flow-arrow">→</div>
+      <div class="flow-node" style="border-color:var(--emerald);color:var(--emerald)">${route.model}</div><div class="flow-arrow">→</div>
+      <div class="flow-node">Response</div>
+    </div>
+    <div style="background:var(--bg2);border-radius:8px;padding:12px;font-size:13px">
+      <span style="color:var(--muted)">Routing reason:</span> <span style="color:var(--text2)">${route.reason}</span>
+    </div>
+  `;
+}
+
+let compareOpen=false;
+function toggleCompare(){
+  compareOpen=!compareOpen;
+  const panel=document.getElementById('compare-panel');
+  if(!compareOpen){panel.style.display='none';return}
+  panel.style.display='block';
+  panel.innerHTML=`
+    <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px">
+      ${['Claude','ChatGPT','DeepSeek'].map(m=>`
+        <div style="background:var(--bg2);border-radius:8px;padding:12px;border:1px solid var(--border)">
+          <div style="font-weight:600;margin-bottom:8px">${m}</div>
+          <div style="font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--emerald);line-height:1.6">
+            [Simulated response for: "Debug this Python code"]<br><br>
+            The issue appears to be on line 12 — the variable 'result' is referenced before assignment...
+          </div>
+          <div style="margin-top:8px;font-size:11px;color:var(--muted)">⚠ Simulated output only</div>
+        </div>
+      `).join('')}
+    </div>
+  `;
+}
+
+// ─────────────────────────────────────────────
+// AGENTS
+// ─────────────────────────────────────────────
+const agents=[
+  {name:'Planner Agent',icon:'🧭',color:'rgba(79,158,255,.15)',border:'rgba(79,158,255,.3)',purpose:'Breaks down complex goals into subtasks and coordinates other agents.',tools:['TaskDecompose','AgentDelegate','PlanStore'],permissions:['Read memory','Write plans'],state:'Idle',tasks:['Plan multi-step user request','Coordinate research + code pipeline']},
+  {name:'Coding Agent',icon:'💻',color:'rgba(0,212,170,.15)',border:'rgba(0,212,170,.3)',purpose:'Writes, debugs, and executes code across languages.',tools:['CodeExecutor','FileSystem','Linter'],permissions:['Code execution','File read/write'],state:'Active',tasks:['Debug Python script','Generate unit tests','Refactor module']},
+  {name:'Research Agent',icon:'🔬',color:'rgba(124,92,255,.15)',border:'rgba(124,92,255,.3)',purpose:'Searches, retrieves, and synthesizes information from multiple sources.',tools:['WebSearch','DocumentReader','Summarizer'],permissions:['Web access','Read files'],state:'Standby',tasks:['Summarize research paper','Fact-check claim','Compare topics']},
+  {name:'System Agent',icon:'⚙️',color:'rgba(255,179,71,.15)',border:'rgba(255,179,71,.3)',purpose:'Manages OS-level tasks, file organization, and workflows.',tools:['FileManager','Scheduler','ProcessRunner'],permissions:['File system access','Process control'],state:'Idle',tasks:['Organize downloads folder','Schedule daily report','Monitor disk usage']},
+  {name:'Hardware Agent',icon:'🔌',color:'rgba(255,90,101,.15)',border:'rgba(255,90,101,.3)',purpose:'Interfaces with physical hardware via the HAL.',tools:['HAL','DeviceDriver','SensorReader'],permissions:['Hardware access — user gated'],state:'Standby',tasks:['Read sensor data','Control LED','Trigger GPIO event']},
+  {name:'Security Agent',icon:'🛡️',color:'rgba(79,158,255,.15)',border:'rgba(79,158,255,.3)',purpose:'Monitors all VEYA actions for policy compliance and safety.',tools:['PolicyChecker','AuditLog','Sandbox'],permissions:['Read all events','Halt actions'],state:'Active',tasks:['Audit plugin request','Enforce permission policy','Flag anomaly']},
+];
+const ag=document.getElementById('agent-grid');
+agents.forEach(a=>{
+  const card=document.createElement('div');
+  card.className='agent-card';
+  card.style.cssText=`background:${a.color};border-color:${a.border}`;
+  card.innerHTML=`
+    <div class="agent-icon" style="background:${a.color}">${a.icon}</div>
+    <div style="font-weight:600;font-size:13px;margin-bottom:4px">${a.name}</div>
+    <div style="font-size:11px;color:var(--text2);margin-bottom:8px">${a.purpose.substring(0,60)}…</div>
+    <div style="display:flex;align-items:center;justify-content:center;gap:6px">
+      <span class="dot ${a.state==='Active'?'dot-green':a.state==='Standby'?'dot-blue':'dot-gray'}"></span>
+      <span style="font-size:11px;color:var(--muted)">${a.state}</span>
+    </div>
+  `;
+  card.onclick=()=>{
+    showPanel(a.name,`
+      <p style="color:var(--text2);font-size:13px;margin-bottom:14px">${a.purpose}</p>
+      <div style="margin-bottom:12px">
+        <div class="section-title">Tools</div>
+        <div style="display:flex;flex-wrap:wrap;gap:6px">${a.tools.map(t=>`<span class="tag tag-blue">${t}</span>`).join('')}</div>
+      </div>
+      <div style="margin-bottom:12px">
+        <div class="section-title">Permissions</div>
+        <div style="display:flex;flex-wrap:wrap;gap:6px">${a.permissions.map(t=>`<span class="tag tag-amber">${t}</span>`).join('')}</div>
+      </div>
+      <div>
+        <div class="section-title">Example Tasks</div>
+        <ul style="font-size:13px;color:var(--text2);padding-left:16px">${a.tasks.map(t=>`<li>${t}</li>`).join('')}</ul>
+      </div>
+    `);
+    const log=document.getElementById('agent-log');
+    const badge=document.createElement('span');
+    badge.className='tag tag-violet';
+    badge.textContent=`${a.name} → inspected`;
+    log.appendChild(badge);
+  };
+  ag.appendChild(card);
+});
+
+// ─────────────────────────────────────────────
+// MEMORY
+// ─────────────────────────────────────────────
+const memLayers=[
+  {name:'Session Memory',status:'active',size:'12KB',desc:'Current conversation and task state',color:'dot-green'},
+  {name:'Long-term Memory',status:'active',size:'4.2MB',desc:'Persistent user patterns and knowledge',color:'dot-blue'},
+  {name:'Local Memory',status:'active',size:'890KB',desc:'Device-local data and configurations',color:'dot-blue'},
+  {name:'User-controlled Data',status:'locked',size:'User managed',desc:'Explicit user data — requires consent to access',color:'dot-amber'},
+];
+const ml=document.getElementById('memory-layers');
+memLayers.forEach(m=>{
+  ml.innerHTML+=`
+    <div style="display:flex;align-items:center;gap:12px;padding:10px;border-radius:8px;background:var(--bg2);border:1px solid var(--border);margin-bottom:8px">
+      <span class="dot ${m.color}"></span>
+      <div style="flex:1">
+        <div style="font-size:13px;font-weight:500">${m.name}</div>
+        <div style="font-size:11px;color:var(--text2)">${m.desc}</div>
+      </div>
+      <div style="text-align:right">
+        <div style="font-size:11px;font-family:'JetBrains Mono',monospace;color:var(--muted)">${m.size}</div>
+        <span class="tag ${m.status==='active'?'tag-emerald':'tag-amber'}">${m.status}</span>
+      </div>
+    </div>
+  `;
+});
+
+const ctxSteps=['User Input','Relevant Memory','Files / Tools','Current Task','Context Package'];
+const cf=document.getElementById('context-flow');
+ctxSteps.forEach((s,i)=>{
+  cf.innerHTML+=`
+    <div style="display:flex;align-items:center;gap:8px;padding:8px 12px;border-radius:6px;background:var(--bg2);border:1px solid var(--border);margin-bottom:${i<ctxSteps.length-1?'0':'0'}">
+      <div style="width:20px;height:20px;border-radius:50%;background:rgba(79,158,255,.15);border:1px solid rgba(79,158,255,.3);display:flex;align-items:center;justify-content:center;font-size:10px;color:var(--blue)">${i+1}</div>
+      <span style="font-size:13px">${s}</span>
+    </div>
+    ${i<ctxSteps.length-1?'<div style="text-align:center;color:var(--muted2);padding:2px 0">↓</div>':''}
+  `;
+});
+
+// ─────────────────────────────────────────────
+// CONTEXT SOURCES
+// ─────────────────────────────────────────────
+const ctxSrc=[
+  {name:'User Preferences',icon:'👤',active:true},
+  {name:'Session History',icon:'📝',active:true},
+  {name:'File Attachments',icon:'📎',active:false},
+  {name:'Web Search Results',icon:'🌐',active:false},
+  {name:'Tool Outputs',icon:'⚙',active:true},
+  {name:'Agent Memory',icon:'🧠',active:true},
+];
+const css=document.getElementById('context-sources');
+ctxSrc.forEach(s=>{
+  css.innerHTML+=`
+    <div style="display:flex;align-items:center;gap:10px;padding:8px;border-radius:6px;background:${s.active?'rgba(0,212,170,.06)':'var(--bg2)'};border:1px solid ${s.active?'rgba(0,212,170,.25)':'var(--border)'};margin-bottom:8px">
+      <span>${s.icon}</span>
+      <span style="font-size:13px;flex:1">${s.name}</span>
+      <span class="tag ${s.active?'tag-emerald':'tag-muted'}">${s.active?'Active':'Not used'}</span>
+    </div>
+  `;
+});
+
+// ─────────────────────────────────────────────
+// TOOLS
+// ─────────────────────────────────────────────
+const tools=[
+  {name:'Code Executor',icon:'💻',tags:['Coding','Sandbox'],desc:'Run code in an isolated sandbox environment'},
+  {name:'File System',icon:'📁',tags:['Storage','Read/Write'],desc:'Read and write files with permission gates'},
+  {name:'Web Search',icon:'🌐',tags:['Research','Real-time'],desc:'Search the web and retrieve structured results'},
+  {name:'Memory Reader',icon:'🧠',tags:['Memory','Context'],desc:'Query long-term and session memory stores'},
+  {name:'Event Emitter',icon:'⚡',tags:['Events','Bus'],desc:'Emit events to the VEYA event bus'},
+  {name:'Hardware API',icon:'🔌',tags:['HAL','Physical'],desc:'Interface with hardware via abstraction layer'},
+  {name:'Scheduler',icon:'⏱',tags:['Automation','Time'],desc:'Schedule tasks and workflows'},
+  {name:'Audit Logger',icon:'📋',tags:['Security','Log'],desc:'Record all actions for audit compliance'},
+  {name:'Document Reader',icon:'📄',tags:['Files','Parse'],desc:'Parse PDFs, docs, and structured data'},
+];
+const tg=document.getElementById('tools-grid');
+tools.forEach(t=>{
+  tg.innerHTML+=`
+    <div class="card" style="cursor:pointer" onclick="showPanel('${t.name}','<p style=\\'color:var(--text2);font-size:13px\\'>${t.desc}</p><div style=\\'margin-top:10px\\'>${t.tags.map(x=>`<span class=\\'tag tag-blue\\'>${x}</span>`).join(' ')}</div>')">
+      <div style="font-size:24px;margin-bottom:8px">${t.icon}</div>
+      <div style="font-weight:600;font-size:13px;margin-bottom:4px">${t.name}</div>
+      <div style="font-size:12px;color:var(--text2);margin-bottom:8px">${t.desc}</div>
+      <div style="display:flex;flex-wrap:wrap;gap:4px">${t.tags.map(x=>`<span class="tag tag-muted">${x}</span>`).join('')}</div>
+    </div>
+  `;
+});
+
+// ─────────────────────────────────────────────
+// PLUGINS
+// ─────────────────────────────────────────────
+const plugins=[
+  {name:'Web Plugin',desc:'Browse and retrieve web content',version:'1.2.0',status:'enabled',icon:'🌐'},
+  {name:'Developer Plugin',desc:'Code analysis, linting, and formatting',version:'2.0.1',status:'enabled',icon:'💻'},
+  {name:'File-System Plugin',desc:'Advanced file operations and indexing',version:'1.0.5',status:'disabled',icon:'📁'},
+  {name:'Hardware Plugin',desc:'Interface with connected physical devices',version:'0.8.2',status:'disabled',icon:'🔌'},
+  {name:'Database Plugin',desc:'Query and manage structured data sources',version:'1.1.0',status:'disabled',icon:'🗄'},
+  {name:'Communication Plugin',desc:'Send messages via email, Slack, etc.',version:'1.3.0',status:'disabled',icon:'📡'},
+  {name:'Research Plugin',desc:'Academic search, citation, and synthesis',version:'2.1.0',status:'enabled',icon:'🔬'},
+  {name:'Custom User Plugin',desc:'User-defined plugin slot — bring your own',version:'—',status:'not-installed',icon:'⊕'},
+];
+const pg=document.getElementById('plugin-grid');
+plugins.forEach(p=>{
+  const card=document.createElement('div');
+  card.className='plugin-card';
+  card.id='plg-'+p.name.replace(/\s+/g,'');
+  card.innerHTML=`
+    <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px">
+      <span style="font-size:24px">${p.icon}</span>
+      <div style="flex:1">
+        <div style="font-weight:600;font-size:13px">${p.name}</div>
+        <div style="font-size:11px;color:var(--muted);font-family:'JetBrains Mono',monospace">v${p.version}</div>
+      </div>
+      <span class="plugin-status tag ${p.status==='enabled'?'tag-emerald':p.status==='disabled'?'tag-muted':'tag-amber'}">${p.status}</span>
+    </div>
+    <div style="font-size:12px;color:var(--text2);margin-bottom:12px">${p.desc}</div>
+    <div style="display:flex;gap:6px;flex-wrap:wrap">
+      ${p.status==='enabled'?`<button class="btn btn-red btn-danger" style="font-size:11px" onclick="disablePlugin('${p.name}')">Disable</button>`:''}
+      ${p.status==='disabled'?`<button class="btn btn-emerald" style="font-size:11px" onclick="enablePlugin('${p.name}')">Enable</button>`:''}
+      ${p.status==='not-installed'?`<button class="btn btn-blue" style="font-size:11px" onclick="installPlugin('${p.name}')">Install</button>`:''}
+      <button class="btn" style="font-size:11px" onclick="showPanel('${p.name} Permissions','<p style=\\'color:var(--text2);font-size:13px\\'>Permissions for this plugin are granted per-use and require explicit user approval. No permissions are active in this simulation.</p><div style=\\'margin-top:10px;font-size:11px;color:var(--amber)\\'>⚠ Visual simulation — no external plugin is actually installed.</div>')">Permissions</button>
+    </div>
+  `;
+  pg.appendChild(card);
+});
+
+function installPlugin(name){
+  showPanel('Installing '+name,'<div style="font-family:\'JetBrains Mono\',monospace;font-size:12px;color:var(--emerald)">Simulating installation...<br>Verifying signature... ✓<br>Checking permissions... ✓<br>Registering in plugin registry... ✓<br><br>Status: SIMULATED COMPLETE</div><div style="margin-top:12px;font-size:11px;color:var(--amber)">⚠ Visual simulation — no real plugin is installed.</div>');
+}
+function enablePlugin(name){
+  showPanel(name+' Enabled','<div style="color:var(--emerald)">Plugin enabled in simulation.</div><div style="margin-top:10px;font-size:11px;color:var(--amber)">⚠ Visual simulation only.</div>');
+}
+function disablePlugin(name){
+  showPanel(name+' Disabled','<div style="color:var(--amber)">Plugin disabled in simulation.</div><div style="margin-top:10px;font-size:11px;color:var(--amber)">⚠ Visual simulation only.</div>');
+}
+
+// ─────────────────────────────────────────────
+// MODS
+// ─────────────────────────────────────────────
+const mods=[
+  {name:'UI Mod',icon:'🎨',compat:'High',status:'stable',desc:'Customize VEYA\'s interface layout, themes, and interaction patterns without touching core logic.'},
+  {name:'Personality Mod',icon:'💬',compat:'Medium',status:'experimental',desc:'Adjust VEYA\'s communication style, verbosity, and response tone for different contexts.'},
+  {name:'Workflow Mod',icon:'🔄',compat:'High',status:'stable',desc:'Redefine how tasks are sequenced, batched, and prioritized within the orchestration layer.'},
+  {name:'System Behavior Mod',icon:'⚙️',compat:'Low',status:'advanced',desc:'Modify core scheduling, context assembly, and agent coordination behavior. Requires deep understanding.'},
+  {name:'Experimental Mod',icon:'🧪',compat:'Unknown',status:'experimental',desc:'Prototype new behaviors outside the stable API. May conflict with other mods. Developer use only.'},
+];
+const mg=document.getElementById('mods-grid');
+mods.forEach(m=>{
+  mg.innerHTML+=`
+    <div class="card" style="margin-bottom:0">
+      <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px">
+        <span style="font-size:24px">${m.icon}</span>
+        <div>
+          <div style="font-weight:600;font-size:14px">${m.name}</div>
+          <div style="display:flex;gap:6px;margin-top:4px">
+            <span class="tag ${m.status==='stable'?'tag-emerald':m.status==='experimental'?'tag-amber':'tag-red'}">${m.status}</span>
+            <span class="tag tag-muted">compat: ${m.compat}</span>
+          </div>
+        </div>
+      </div>
+      <div style="font-size:13px;color:var(--text2)">${m.desc}</div>
+    </div>
+  `;
+});
+
+// ─────────────────────────────────────────────
+// HARDWARE
+// ─────────────────────────────────────────────
+const hwStack=[
+  {label:'AI / VEYA Core',color:'rgba(79,158,255,.2)',border:'rgba(79,158,255,.4)'},
+  {label:'Hardware Abstraction Layer (HAL)',color:'rgba(124,92,255,.15)',border:'rgba(124,92,255,.35)'},
+  {label:'Driver / Protocol',color:'rgba(0,212,170,.12)',border:'rgba(0,212,170,.3)'},
+  {label:'MCU / SBC',color:'rgba(255,179,71,.12)',border:'rgba(255,179,71,.3)'},
+  {label:'Physical Hardware',color:'rgba(255,90,101,.12)',border:'rgba(255,90,101,.3)'},
+];
+const hs=document.getElementById('hw-stack');
+hwStack.forEach((h,i)=>{
+  hs.innerHTML+=`
+    <div style="text-align:center;padding:12px;border-radius:8px;background:${h.color};border:1px solid ${h.border};font-size:13px;font-weight:500;margin-bottom:${i<hwStack.length-1?'0':'0'}">
+      ${h.label}
+    </div>
+    ${i<hwStack.length-1?'<div style="text-align:center;color:var(--muted2);font-size:18px;padding:3px 0">↕</div>':''}
+  `;
+});
+
+const hwComponents=[
+  {name:'CPU/MCU',icon:'⬡'},{name:'SBC',icon:'▦'},{name:'RAM',icon:'▪'},{name:'Flash',icon:'◈'},
+  {name:'Wi-Fi',icon:'◎'},{name:'Bluetooth',icon:'◉'},{name:'USB',icon:'⊕'},{name:'GPIO',icon:'⬠'},
+  {name:'Sensors',icon:'◌'},{name:'Display',icon:'▣'},{name:'Microphone',icon:'◎'},{name:'Speaker',icon:'◈'},
+  {name:'LEDs',icon:'◦'},{name:'Motors',icon:'⟁'},{name:'VEYA Wearable',icon:'⌚'},
+];
+const hg=document.getElementById('hw-grid');
+hwComponents.forEach(h=>{
+  hg.innerHTML+=`
+    <div class="hw-card" onclick="showPanel('${h.name}','<p style=\\'color:var(--text2);font-size:13px\\'>Conceptual hardware interface definition for ${h.name}. All hardware access is mediated by the Hardware Abstraction Layer and requires user permission grants.</p><div style=\\'margin-top:10px;font-size:11px;color:var(--amber)\\'>⚠ Conceptual hardware interface — not a claim of built hardware.</div>')">
+      <div class="hw-icon">${h.icon}</div>
+      <div class="hw-name">${h.name}</div>
+    </div>
+  `;
+});
+
+// ─────────────────────────────────────────────
+// SECURITY
+// ─────────────────────────────────────────────
+const secLayers=[
+  {name:'Authentication',icon:'🔑',status:'active'},
+  {name:'Permission Checks',icon:'🔒',status:'active'},
+  {name:'Policy Enforcement',icon:'📋',status:'active'},
+  {name:'Sandboxing',icon:'📦',status:'active'},
+  {name:'Audit Logging',icon:'📝',status:'active'},
+  {name:'Encryption',icon:'🔐',status:'active'},
+  {name:'Safe Mode',icon:'🛡',status:'standby'},
+  {name:'Offline Mode',icon:'📵',status:'standby'},
+  {name:'User Approval Gates',icon:'✋',status:'active'},
+  {name:'Hardware Permissions',icon:'🔌',status:'gated'},
+  {name:'Plugin Permissions',icon:'⊕',status:'gated'},
+];
+const sl=document.getElementById('sec-layers');
+secLayers.forEach(s=>{
+  sl.innerHTML+=`
+    <div style="display:flex;align-items:center;gap:10px;padding:7px;border-radius:6px;background:var(--bg2);border:1px solid var(--border);margin-bottom:6px">
+      <span>${s.icon}</span>
+      <span style="flex:1;font-size:13px">${s.name}</span>
+      <span class="dot ${s.status==='active'?'dot-green':s.status==='standby'?'dot-blue':'dot-amber'}"></span>
+    </div>
+  `;
+});
+
+const secEvents=[
+  {type:'GRANTED',icon:'✅',color:'rgba(0,212,170,.12)',border:'rgba(0,212,170,.3)',title:'Web Plugin — Read Access',flow:'Plugin requests web access → Policy check → User approval → Access granted'},
+  {type:'DENIED',icon:'❌',color:'rgba(255,90,101,.1)',border:'rgba(255,90,101,.3)',title:'System Agent — Admin Rights',flow:'Agent requests admin → Policy check → Blocked by policy → Access DENIED'},
+];
+function renderSecTimeline(){
+  const st=document.getElementById('sec-timeline');
+  st.innerHTML='';
+  secEvents.forEach(e=>{
+    st.innerHTML+=`
+      <div class="sec-event" style="background:${e.color};border-color:${e.border}">
+        <div class="sec-event-icon" style="background:${e.color};border:1px solid ${e.border}">${e.icon}</div>
+        <div>
+          <div style="font-weight:600;font-size:13px;margin-bottom:4px">${e.title}</div>
+          <div style="font-size:11px;color:var(--text2);font-family:'JetBrains Mono',monospace">${e.flow}</div>
+        </div>
+      </div>
+    `;
+  });
+}
+renderSecTimeline();
+
+const randomSecEvents=[
+  {type:'GRANTED',title:'Research Plugin — Web Search',flow:'Plugin calls web search → Policy OK → User pre-approved → Granted'},
+  {type:'DENIED',title:'Coding Agent — Network Access',flow:'Agent requests outbound network → Policy: sandbox only → DENIED'},
+  {type:'GRANTED',title:'File-System Plugin — Read Documents',flow:'Read request → User whitelisted folder → Policy OK → Granted'},
+  {type:'DENIED',title:'Hardware Plugin — GPIO Write',flow:'GPIO write attempt → Hardware permission required → User not asked → DENIED'},
+];
+let secIdx=0;
+function runSecEvent(){
+  const e=randomSecEvents[secIdx%randomSecEvents.length];
+  const c=e.type==='GRANTED'?{color:'rgba(0,212,170,.12)',border:'rgba(0,212,170,.3)',icon:'✅'}:{color:'rgba(255,90,101,.1)',border:'rgba(255,90,101,.3)',icon:'❌'};
+  secEvents.unshift({...e,...c});
+  if(secEvents.length>4)secEvents.pop();
+  renderSecTimeline();
+  secIdx++;
+}
+
+// ─────────────────────────────────────────────
+// EVENT BUS
+// ─────────────────────────────────────────────
+const eventTypes=[
+  {name:'VOICE_RECEIVED',color:'var(--blue)',detail:{source:'Microphone',payload:'Audio stream 44.1kHz',agent:'System Agent',ts:'sim_t+0ms'}},
+  {name:'MODEL_SELECTED',color:'var(--violet)',detail:{model:'Claude',reason:'Coding task detected',confidence:'0.92',ts:'sim_t+12ms'}},
+  {name:'PLUGIN_ENABLED',color:'var(--emerald)',detail:{plugin:'Web Plugin',version:'1.2.0',permissions:'web_read',ts:'sim_t+8ms'}},
+  {name:'DEVICE_CONNECTED',color:'var(--amber)',detail:{device:'VEYA Wearable',protocol:'BLE',id:'sim_wearable_01',ts:'sim_t+5ms'}},
+  {name:'PERMISSION_REQUESTED',color:'var(--amber)',detail:{requester:'Coding Agent',resource:'filesystem',scope:'read_only',ts:'sim_t+20ms'}},
+  {name:'ACTION_EXECUTED',color:'var(--blue)',detail:{action:'file_read',path:'/demo/sample.py',status:'success',ts:'sim_t+25ms'}},
+  {name:'VERIFICATION_COMPLETE',color:'var(--emerald)',detail:{checks:['safety','quality','policy'],result:'pass',ts:'sim_t+30ms'}},
+  {name:'CONTEXT_BUILT',color:'var(--violet)',detail:{sources:3,tokens:2048,agents:2,ts:'sim_t+15ms'}},
+  {name:'AGENT_SPAWNED',color:'var(--blue)',detail:{agent:'Coding Agent',task:'debug_python',priority:'normal',ts:'sim_t+10ms'}},
+];
+let evTimer=null,evIdx=0;
+function startEvents(){
+  if(evTimer)return;
+  evTimer=setInterval(()=>{
+    const e=eventTypes[evIdx%eventTypes.length];
+    const now=new Date();
+    const t=`${String(now.getHours()).padStart(2,'0')}:${String(now.getMinutes()).padStart(2,'0')}:${String(now.getSeconds()).padStart(2,'0')}`;
+    const div=document.createElement('div');
+    div.className='event-item';
+    div.style.borderLeftColor=e.color;
+    div.style.borderLeftWidth='2px';
+    div.innerHTML=`<span style="color:var(--muted);min-width:52px">${t}</span><span style="color:${e.color};flex:1">${e.name}</span><span style="color:var(--text3);font-size:11px">click to inspect</span>`;
+    div.onclick=()=>{
+      const d=document.getElementById('event-detail');
+      d.style.display='block';
+      d.innerHTML=`
+        <div class="card" style="border-color:${e.color}40">
+          <div style="font-weight:600;color:${e.color};margin-bottom:10px">${e.name}</div>
+          <pre style="font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--emerald);white-space:pre-wrap">${JSON.stringify(e.detail,null,2)}</pre>
+        </div>
+      `;
+    };
+    const eb=document.getElementById('event-bus');
+    eb.insertBefore(div,eb.firstChild);
+    if(eb.children.length>40)eb.removeChild(eb.lastChild);
+    evIdx++;
+  },800);
+}
+function stopEvents(){clearInterval(evTimer);evTimer=null}
+function clearEvents(){document.getElementById('event-bus').innerHTML='';document.getElementById('event-detail').style.display='none'}
+
+// ─────────────────────────────────────────────
+// DIAGNOSTICS
+// ─────────────────────────────────────────────
+const ds=[
+  {label:'Agents Active',val:'6',sub:'All running'},
+  {label:'Events/sec',val:'4.2',sub:'Simulated rate'},
+  {label:'Memory Used',val:'5.1MB',sub:'Session+LTM'},
+  {label:'Security Status',val:'SAFE',sub:'No anomalies'},
+];
+const dsg=document.getElementById('diag-stats');
+ds.forEach(d=>{
+  dsg.innerHTML+=`<div class="card card-sm"><div style="font-size:11px;color:var(--muted);margin-bottom:4px">${d.label}</div><div style="font-size:20px;font-weight:600;color:var(--blue)">${d.val}</div><div style="font-size:11px;color:var(--text3)">${d.sub}</div></div>`;
+});
+
+const perf=[
+  {label:'Model Latency',val:38,max:100,color:'var(--emerald)'},
+  {label:'Agent Response',val:62,max:100,color:'var(--blue)'},
+  {label:'Context Assembly',val:24,max:100,color:'var(--violet)'},
+  {label:'Plugin Overhead',val:11,max:100,color:'var(--amber)'},
+];
+const dp=document.getElementById('diag-perf');
+perf.forEach(p=>{
+  dp.innerHTML+=`
+    <div style="margin-bottom:14px">
+      <div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:4px">
+        <span style="color:var(--text2)">${p.label}</span>
+        <span style="color:var(--muted);font-family:'JetBrains Mono',monospace">${p.val}ms</span>
+      </div>
+      <div class="diag-bar"><div class="diag-fill" style="width:${p.val}%;background:${p.color}"></div></div>
+    </div>
+  `;
+});
+
+const logMessages=[
+  '[INFO] Agent orchestrator initialized',
+  '[INFO] Memory store connected',
+  '[INFO] Plugin registry loaded: 3 active',
+  '[OK] Security policy engine running',
+  '[INFO] Event bus listening on all channels',
+  '[OK] Context engine ready',
+  '[INFO] Model router: 5 models available',
+  '[OK] HAL initialized in simulation mode',
+  '[INFO] SDK endpoints registered (conceptual)',
+  '[INFO] VEYA core boot complete — simulation mode',
+];
+const dl=document.getElementById('diag-log');
+logMessages.forEach(m=>{
+  dl.innerHTML+=`<div style="padding:2px 0;color:${m.startsWith('[OK]')?'var(--emerald)':m.startsWith('[INFO]')?'var(--text2)':'var(--red)'};border-bottom:1px solid var(--border)">${m}</div>`;
+});
+function clearLog(){document.getElementById('diag-log').innerHTML='<div style="color:var(--muted);font-size:11px;padding:4px 0">Log cleared.</div>'}
+
+// ─────────────────────────────────────────────
+// SDK
+// ─────────────────────────────────────────────
+const eco=document.getElementById('sdk-ecosystem');
+const ecoFlow=['VEYA Core','SDK','Developers','Plugins / Agents / Mods','Users'];
+eco.innerHTML=`<div style="display:flex;align-items:center;justify-content:center;flex-wrap:wrap;gap:0">${ecoFlow.map((e,i)=>`<div style="background:var(--bg2);border:1px solid var(--border2);border-radius:8px;padding:8px 16px;font-size:13px;font-weight:500">${e}</div>${i<ecoFlow.length-1?'<div style="color:var(--muted2);margin:0 6px;font-size:16px">→</div>':''}`).join('')}</div>`;
+
+const apis=[
+  {name:'Agent API',desc:'Define, spawn, and communicate with agents. Attach tools, set permissions, and observe state.',code:'// Conceptual API design\nconst agent = await veya.agents.create({\n  name: "MyAgent",\n  tools: ["file_read", "web_search"],\n  permissions: ["user_gated"]\n});\nawait agent.run({ task: "Summarize this document" });'},
+  {name:'Event API',desc:'Subscribe to the VEYA event bus. React to system events, user actions, and agent output.',code:'// Conceptual API design\nveya.events.on("TASK_COMPLETE", (payload) => {\n  console.log(payload.result);\n});\nveya.events.emit("CUSTOM_EVENT", { data: "..." });'},
+  {name:'Hardware API',desc:'Interface with physical hardware through the HAL. All calls require explicit permission grants.',code:'// Conceptual API design\nconst hal = veya.hardware.get("GPIO");\nawait hal.request({ permission: "write", pin: 4 });\nawait hal.write({ pin: 4, value: true });'},
+  {name:'UI API',desc:'Register custom UI panels, widgets, and sidebar items in the VEYA interface.',code:'// Conceptual API design\nveya.ui.register({\n  panel: "my-plugin-panel",\n  component: MyPanelComponent,\n  nav: { label: "My Plugin", icon: "◈" }\n});'},
+  {name:'Memory API',desc:'Read from and write to VEYA\'s memory layers. User consent required for persistent writes.',code:'// Conceptual API design\nconst mem = veya.memory.session;\nawait mem.set("last_task", { type: "code", lang: "python" });\nconst prev = await mem.get("last_task");'},
+  {name:'Permission API',desc:'Request and check permissions before performing sensitive actions. All gated by user approval.',code:'// Conceptual API design\nconst allowed = await veya.permissions.request({\n  resource: "filesystem",\n  scope: "read",\n  reason: "Reading config file"\n});'},
+];
+const sa=document.getElementById('sdk-apis');
+apis.forEach(a=>{
+  const div=document.createElement('div');
+  div.className='sdk-api';
+  div.innerHTML=`
+    <div style="display:flex;align-items:center;justify-content:space-between">
+      <div>
+        <div style="font-weight:600;font-size:14px;color:var(--violet)">${a.name}</div>
+        <div style="font-size:12px;color:var(--text2);margin-top:3px">${a.desc}</div>
+      </div>
+      <span style="font-size:18px;color:var(--muted2)">+</span>
+    </div>
+    <div class="sdk-code"><pre style="font-family:'JetBrains Mono',monospace;font-size:11px;white-space:pre-wrap;line-height:1.6">${a.code}</pre></div>
+  `;
+  div.onclick=()=>{div.classList.toggle('open')};
+  sa.appendChild(div);
+});
+
+// ─────────────────────────────────────────────
+// SETTINGS / MODES
+// ─────────────────────────────────────────────
+const modes=[
+  {name:'LOCAL',icon:'💾',desc:'Local models, local memory, and local tools only. Maximum privacy.',detail:'All processing happens on-device. No data leaves the local environment. Suitable for sensitive tasks with privacy requirements.',tradeoffs:{Privacy:'Highest',Cost:'Lowest',Capability:'Limited',Connectivity:'None required'}},
+  {name:'CLOUD',icon:'☁️',desc:'Cloud AI models with online services and maximum capability.',detail:'Connects to cloud AI models and external services. High capability and up-to-date knowledge. Requires network. Data may be processed externally.',tradeoffs:{Privacy:'Standard',Cost:'Pay-per-use',Capability:'Maximum',Connectivity:'Required'}},
+  {name:'HYBRID',icon:'⚡',desc:'Local processing with cloud intelligence for complex tasks.',detail:'Handles simple tasks locally; escalates complex reasoning to cloud models. Balances privacy, cost, and capability. The recommended default.',tradeoffs:{Privacy:'High',Cost:'Moderate',Capability:'Strong',Connectivity:'When needed'}},
+];
+let activeMode='HYBRID';
+function renderModes(){
+  const mt=document.getElementById('mode-tabs');
+  mt.innerHTML='';
+  modes.forEach(m=>{
+    const tab=document.createElement('div');
+    tab.className='mode-tab'+(m.name===activeMode?' active':'');
+    tab.innerHTML=`${m.icon} ${m.name}`;
+    tab.onclick=()=>{activeMode=m.name;renderModes()};
+    mt.appendChild(tab);
+  });
+  const m=modes.find(x=>x.name===activeMode);
+  document.getElementById('mode-detail').innerHTML=`
+    <div style="font-size:13px;color:var(--text2);margin-bottom:14px">${m.detail}</div>
+  `;
+  const mm=document.getElementById('mode-matrix');
+  mm.innerHTML=Object.entries(m.tradeoffs).map(([k,v])=>`
+    <div style="display:flex;align-items:center;justify-content:space-between;padding:10px;border-radius:8px;background:var(--bg2);border:1px solid var(--border);margin-bottom:8px">
+      <span style="font-size:13px;color:var(--text2)">${k}</span>
+      <span class="tag tag-blue">${v}</span>
+    </div>
+  `).join('');
+}
+renderModes();
+
+</script>
+</body>
+</html>
